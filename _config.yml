@@ -6,7 +6,7 @@ theme: jekyll-theme-chirpy
 # The language of the webpage › http://www.lingoes.net/en/translator/langcode.htm
 # If it has the same name as one of the files in folder `_data/locales`, the layout language will also be changed,
 # otherwise, the layout language will use the default value of 'en'.
-lang: en
+lang: pt-BR
 
 # Change to your timezone › https://zones.arilyn.cc
 timezone: America/Sao_Paulo
@@ -26,11 +26,6 @@ url: "https://masters-seo.github.io"
 
 social:
   name: "Redação Masters SEO"
-  email: 
-  fediverse_handle:
-    # Uncomment below to add more social links
-    # - https://www.facebook.com/username
-    # - https://www.linkedin.com/in/username
 
 # Site Verification Settings
 webmaster_verifications:
@@ -142,8 +137,8 @@ pwa:
     # Paths defined here will be excluded from the PWA cache.
     # Usually its value is the `baseurl` of another website that
     # shares the same domain name as the current website.
-    deny_paths:
-      # - "/example"  # URLs match `<SITE_URL>/example/*` will not be cached by the PWA
+    # deny_paths:
+    #   - "/example"  # URLs match `<SITE_URL>/example/*` will not be cached by the PWA
 
 paginate: 10
 
