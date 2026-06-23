@@ -1,12 +1,12 @@
 ---
-title: Organizando Projeto de Site no GitHub - Experts de SEO
-date: 2026-06-23 19:40:00 -0300
+title: "Organizando Projeto de Site no GitHub - Experts de SEO"
+date: 2026-06-23 08:00:00 -0300
 categories: [SEO, Estrutura]
 tags: [boas-praticas, pareto, autoridade]
 layout: post
 ---
 
-Aqui estão as duas opções visuais corrigidas para veres diretamente no teu site. Escolhe a que mais gostas e apaga a outra:
+Aqui estão as duas opções visuais corrigidas para ver diretamente no site. Escolha a que mais gostar e apague a outra:
 
 ### Opção A: Caixa Informativa (Verde / Vermelha)
 
