@@ -4,12 +4,18 @@ import random
 import re
 import unicodedata
 import requests
+import json
 from datetime import datetime
 from pathlib import Path
 from google import genai
+# Nova biblioteca para autenticação automática com a API do Google
+from google.oauth2 import service_account
+from google.auth.transport.requests import Request
 
 CONFIG = {
     'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY', ''),
+    # Guarde o conteúdo do JSON da sua Conta de Serviço do Google Cloud nesta variável de ambiente
+    'GOOGLE_SERVICE_ACCOUNT_JSON': os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON', ''),
     'COMPANY_NAME': os.getenv('COMPANY_NAME', 'Masters SEO'),
     'COMPANY_WEBSITE': os.getenv('COMPANY_WEBSITE', 'https://masters-seo.github.io/'),
     'OUTPUT_FOLDER': '_posts',
@@ -164,6 +170,41 @@ def gerar_imagem_com_texto(titulo, slug):
         print(f"⚠️ Erro ao gerar imagem customizada: {e}")
         return CONFIG['URL_IMAGEM_PADRAO']
 
+# Nova função injetada para automatizar o pedido de rastreio no Google Search
+def solicitar_indexacao_google(target_url):
+    if not CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON']:
+        print("⚠️ Notificação de indexação ignorada: GOOGLE_SERVICE_ACCOUNT_JSON não configurada.")
+        return False
+    try:
+        info = json.loads(CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON'])
+        scopes = ['https://www.googleapis.com/auth/indexing']
+        credentials = service_account.Credentials.from_service_account_info(info, scopes=scopes)
+        
+        # Autentica e gera o Token de Acesso temporário
+        credentials.refresh(Request())
+        token = credentials.token
+        
+        endpoint = "https://indexing.googleapis.com/v3/urlNotifications:publish"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token}"
+        }
+        body = {
+            "url": target_url,
+            "type": "URL_UPDATED"
+        }
+        
+        response = requests.post(endpoint, json=body, headers=headers)
+        if response.status_code == 200:
+            print(f"🚀 Sucesso! Google Search notificado instantaneamente para indexar: {target_url}")
+            return True
+        else:
+            print(f"❌ Falha ao notificar o Google. Status: {response.status_code} - {response.text}")
+            return False
+    except Exception as e:
+        print(f"⚠️ Erro ao executar a Indexing API do Google: {e}")
+        return False
+
 def main():
     if not CONFIG['GEMINI_API_KEY']:
         print("❌ GEMINI_API_KEY ausente.")
@@ -197,14 +238,12 @@ def main():
         print("❌ Conteúdo gerado é inválido ou curto demais.")
         return False
         
-    # Extração inteligente da Categoria e das Tags baseadas no contexto analisado pela IA
     category_match = re.search(r"CATEGORIA_SELECIONADA:\s*(.+)", content)
     tags_match = re.search(r"TAGS_SELECIONADAS:\s*(.+)", content)
     
     selected_category = category_match.group(1).strip() if category_match else "Análises"
     selected_tags = tags_match.group(1).strip() if tags_match else "seo, marketing-digital, otimizacao"
     
-    # Limpa as tags de controle do topo para não poluírem o texto visível do artigo
     content = re.sub(r"CATEGORIA_SELECIONADA:.*\n?", "", content)
     content = re.sub(r"TAGS_SELECIONADAS:.*\n?", "", content)
     content = content.strip()
@@ -238,6 +277,13 @@ tags: [{selected_tags}]{image_meta}
         f.write(final_markdown)
         
     print(f"✅ Artigo Jekyll de Alta Performance salvo com sucesso em: {file_path}")
+    
+    # Executa a Indexação Automática enviando a URL pública gerada para o Google
+    # Nota: A rota padrão estruturada pelo Jekyll costuma ser o domínio + /categoria/ano/mes/dia/slug.html ou /ano/mes/dia/slug/
+    # Ajuste a montagem abaixo se a estrutura de permalinks do seu site for diferente
+    public_post_url = f"{CONFIG['COMPANY_WEBSITE']}blog/{slug}/"
+    solicitar_indexacao_google(public_post_url)
+    
     return True
 
 if __name__ == '__main__':
