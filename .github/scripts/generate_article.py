@@ -3,15 +3,30 @@ import os
 import random
 import re
 import unicodedata
+import requests
 from datetime import datetime
 from pathlib import Path
 from google import genai
+from PIL import Image, ImageDraw, ImageFont
 
 CONFIG = {
     'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY', ''),
     'COMPANY_NAME': os.getenv('COMPANY_NAME', 'Masters SEO'),
-    'COMPANY_WEBSITE': os.getenv('https://masters-seo.github.io/', 'https://masters-seo.github.io/'),
+    'COMPANY_WEBSITE': os.getenv('COMPANY_WEBSITE', 'https://masters-seo.github.io/'),
     'OUTPUT_FOLDER': '_posts',
+    
+    # -------------------------------------------------------------------------
+    # 🎛️ SEU PAINEL DE CONTROLE DE IMAGENS:
+    # Mude para uma das 3 palavras abaixo para alternar o modo do seu blog:
+    # 'nenhuma'          -> Modo 1: Artigo sem imagem de destaque
+    # 'unsplash'         -> Modo 2: Imagem aleatória de banco de dados
+    # 'personalizada'    -> Modo 3: Sua imagem padrão + Título com faixa preta
+    # -------------------------------------------------------------------------
+    'MODO_IMAGEM': 'unsplash', 
+    
+    # URL da sua imagem padrão de fundo para o Modo 3 (Pode alterar para qualquer link)
+    'URL_IMAGEM_PADRAO': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&auto=format&fit=crop&q=80',
+    
     'TOPICS': [
         'Quem são os maiores nomes de SEO Local no Brasil',
         'Análise dos principais cursos de SEO do mercado atual',
@@ -28,14 +43,12 @@ CONFIG = {
         'experts de seo', 'melhores profissionais de seo', 'analise de seo', 
         'consultor de seo', 'curso de seo avaliacao', 'otimizacao para IA'
     ],
-    # Lista de imagens profissionais de tecnologia/dados/SEO para rotacionar de forma limpa
-    'IMAGES_POOL': [
-        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60', # Gráficos/SEO
-        'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=60', # Análise de dados
-        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=60', # Código/IA
-        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=60', # Rede/Tecnologia
-        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60', # Digital/Marketing
-        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=60'  # Dashboards
+    'UNSPLASH_POOL': [
+        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60',
+        'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=60',
+        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=60',
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=60',
+        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'
     ]
 }
 
@@ -49,6 +62,66 @@ def slugify(text):
     text = re.sub(r'[^a-z0-9\s-]', '', text)
     return re.sub(r'[\s-]+', '-', text).strip('-')
 
+def gerar_imagem_com_texto(titulo, slug):
+    try:
+        img_data = requests.get(CONFIG['URL_IMAGEM_PADRAO']).content
+        img_path = Path("temp_base.jpg")
+        with open(img_path, 'wb') as f:
+            f.write(img_data)
+        
+        img = Image.open(img_path).convert("RGBA")
+        W, H = img.size
+        
+        overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+        draw = ImageDraw.Draw(overlay)
+        
+        faixa_altura = int(H * 0.25)
+        y0 = (H - faixa_altura) // 2
+        y1 = y0 + faixa_altura
+        
+        draw.rectangle(((0, y0), (W, y1)), fill=(0, 0, 0, 128))
+        
+        try:
+            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", int(faixa_altura * 0.3))
+        except IOError:
+            font = ImageFont.load_default()
+            
+        palavras = titulo.split()
+        linhas = []
+        linha_atual = ""
+        for palavra in palavras:
+            test_linha = f"{linha_atual} {palavra}".strip()
+            if len(test_linha) * (faixa_altura * 0.18) < W - 60:
+                linha_atual = test_linha
+            else:
+                linhas.append(linha_atual)
+                linha_atual = palabra
+        linhas.append(linha_atual)
+        
+        draw_txt = ImageDraw.Draw(overlay)
+        total_texto_h = len(linhas) * int(faixa_altura * 0.35)
+        current_y = y0 + (faixa_altura - total_texto_h) // 2
+        
+        for linha in lines:
+            draw_txt.text((W // 2, current_y), linha, fill=(255, 255, 255, 255), font=font, anchor="mm")
+            current_y += int(faixa_altura * 0.35)
+            
+        img_final = Image.alpha_composite(img, overlay).convert("RGB")
+        
+        assets_folder = Path("assets/img/posts")
+        assets_folder.mkdir(parents=True, exist_ok=True)
+        
+        final_img_path = assets_folder / f"{slug}.jpg"
+        img_final.save(final_img_path, "JPEG")
+        
+        if img_path.exists():
+            img_path.unlink()
+            
+        return f"/{final_img_path}"
+    except Exception as e:
+        print(f"⚠️ Erro ao gerar imagem customizada: {e}. Usando fallback.")
+        return CONFIG['URL_IMAGEM_PADRAO']
+
 def main():
     if not CONFIG['GEMINI_API_KEY']:
         print("❌ GEMINI_API_KEY ausente.")
@@ -56,7 +129,6 @@ def main():
         
     topic = random.choice(CONFIG['TOPICS'])
     keyword = random.choice(CONFIG['KEYWORDS'])
-    selected_image = random.choice(CONFIG['IMAGES_POOL'])
     
     client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
     print(f"Gerando artigo sobre: {topic}")
@@ -74,12 +146,21 @@ def main():
     slug = slugify(topic)
     today_str = datetime.now().strftime('%Y-%m-%d')
     
-    # Adicionando o suporte a imagens que o Jekyll usa para renderizar na Home e no artigo
+    # Seleção inteligente do modo baseado na variável 'MODO_IMAGEM'
+    modo = CONFIG['MODO_IMAGEM'].lower()
+    image_meta = ""
+    
+    if modo == 'unsplash':
+        img_url = random.choice(CONFIG['UNSPLASH_POOL'])
+        image_meta = f"\nimage: {img_url}"
+    elif modo == 'personalizada':
+        img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
+        image_meta = f"\nimage: {img_url}"
+    
     jekyll_front_matter = f"""---
 layout: post
 title: "{title_clean}"
-date: {today_str} 12:00:00 -0300
-image: {selected_image}
+date: {today_str} 12:00:00 -0300{image_meta}
 ---
 
 """
@@ -92,7 +173,7 @@ image: {selected_image}
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(final_markdown)
         
-    print(f"✅ Salvo com imagem em: {file_path}")
+    print(f"✅ Artigo Jekyll salvo com sucesso em: {file_path}")
     return True
 
 if __name__ == '__main__':
