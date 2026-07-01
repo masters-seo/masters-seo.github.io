@@ -157,6 +157,10 @@ ALT TEXT DA IMAGEM DO MEIO: {alt_text_secondary}
 TRANSCRIÇÃO DO VÍDEO PARA CONTEXTO ABSOLUTO:
 \"\"\"{transcricao}\"\"\"
 
+🚨 DIRETRIZES DE IDIOMA, ADAPTAÇÃO E LOCALIZAÇÃO CULTURAL (OBRIGATÓRIO):
+- IDIOMA: Todo o conteúdo gerado (incluindo o título do artigo, introdução, resumo, corpo do texto, FAQ, CATEGORIA_SELECIONADA, TAGS_SELECIONADAS e metadados ocultos do Schema JSON-LD) deve ser escrito em PORTUGUÊS DO BRASIL fluído, natural e gramaticalmente impecável.
+- ADAPTAÇÃO CULTURAL E CONTEXTUALIZAÇÃO: Se a transcrição original mencionar ferramentas, leis, moedas, comportamento de mercado ou exemplos específicos dos Estados Unidos/Europa que não se aplicam ou não fazem sentido direto para o público brasileiro, você deve ADAPTAR E LOCALIZAR essas informações para o contexto e a realidade do mercado de SEO e marketing digital no BRASIL (ex: converter referências de dólares para reais se aplicável, adaptar termos puramente americanos para equivalentes práticos do ecossistema brasileiro).
+
 DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT (Framework Copywriting Avançado):
 1. ESCANEABILIDADE MÁXIMA: Escreva o artigo utilizando parágrafos muito curtos. Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente.
 2. TOM EDITORIAL: Premium, analítico e imparcial. Sem clichês.
@@ -183,7 +187,6 @@ Você deve OBRIGATORIAMENTE analisar o Tópico e o Conteúdo gerado para definir
 2. TAGS: Defina exatamente 3 tags curtas e estratégicas em minúsculas que complementem e façam sentido direto para o artigo. Escreva no formato: 'TAGS_SELECIONADAS: tag1, tag2, tag3'.
 
 IMPORTANTE: Devolva exclusivamente o código estruturado em Markdown do artigo. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta."""
-
 def slugify(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8').lower()
     text = re.sub(r'[^a-z0-9\s-]', '', text)
