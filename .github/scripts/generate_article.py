@@ -63,7 +63,7 @@ DIRETRIZES OBRIGATÓRIAS DE ESCRITA (Framework Copywriting Avançado):
 2. TOM EDITORIAL: Premium, analítico e imparcial. Elimine adjetivos vazios ou clichês comerciais espalhafatosos ("revolucionário", "incrível", "mágico").
 3. ESTRUTURA REQUERIDA:
    - Inicie o texto diretamente no conteúdo através de uma introdução marcante.
-   - Divida o conteúdo por meio de intertítulos estruturados em H2 e H3 baseados em benefícios reais.
+   - Divida o conteúdo por meio de intertítulos estruturados in H2 e H3 baseados em benefícios reais.
    - Enriqueça a leitura utilizando tabelas comparativas, listas com marcadores (bullet points) ou analogias práticas sempre que fizer sentido para explicar o tópico de forma simples.
    - Desenvolva uma conclusão amarrando os dados apresentados, seguida de uma chamada para ação (CTA) sutil direcionando o leitor a explorar as demais análises no portal {CONFIG['COMPANY_WEBSITE']}.
    - Apresente uma seção robusta de FAQ contendo entre 5 e 7 dúvidas reais e frequentes sobre o tema, com respostas diretas e curtas.
@@ -77,7 +77,6 @@ def slugify(text):
     return re.sub(r'[\s-]+', '-', text).strip('-')
 
 def gerar_imagem_com_texto(titulo, slug):
-    # Importações isoladas aqui dentro para evitar que o script quebre globalmente por falta de dependências locais
     try:
         from PIL import Image, ImageDraw, ImageFont
     except ImportError:
@@ -110,13 +109,13 @@ def gerar_imagem_com_texto(titulo, slug):
         palavras = titulo.split()
         linhas = []
         linha_atual = ""
-        for palabra in palavras:
-            test_linha = f"{linha_atual} {palabra}".strip()
+        for palavra in palavras:
+            test_linha = f"{linha_atual} {palavra}".strip()
             if len(test_linha) * (faixa_altura * 0.18) < W - 60:
                 linha_atual = test_linha
             else:
                 linhas.append(linha_atual)
-                linha_atual = palabra
+                linha_atual = palavra
         linhas.append(linha_atual)
         
         draw_txt = ImageDraw.Draw(overlay)
@@ -177,12 +176,12 @@ def main():
         img_url = random.choice(CONFIG['UNSPLASH_POOL'])
         image_meta = f"""\nimage:
   path: {img_url}
-  alt: "{alt_text_clean}"""
+  alt: "{alt_text_clean}\""""
     elif modo == 'personalizada':
         img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
         image_meta = f"""\nimage:
   path: {img_url}
-  alt: "{alt_text_clean}"""
+  alt: "{alt_text_clean}\""""
     
     jekyll_front_matter = f"""---
 layout: post
