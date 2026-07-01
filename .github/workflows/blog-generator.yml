@@ -33,9 +33,12 @@ jobs:
         run: |
           python .github/scripts/generate_article.py
       
-      - name: Commit changes
+     - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add _posts/*.md || true
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Add auto-generated article $(date +'%Y-%m-%d')" && git push)
+          git add assets/img/posts/*.jpg || true
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Add auto-generated article and assets $(date +'%Y-%m-%d')" && git push)
+
+          
