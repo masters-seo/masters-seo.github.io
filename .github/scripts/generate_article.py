@@ -1,90 +1,83 @@
 #!/usr/bin/env python3
 import os
-import json
 import random
 import re
 import unicodedata
 from datetime import datetime
 from pathlib import Path
-
-try:
-    import google.generativeai as genai
-    HAS_GEMINI = True
-except ImportError:
-    HAS_GEMINI = False
+from google import genai
 
 CONFIG = {
     'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY', ''),
-    'COMPANY_NAME': os.getenv('COMPANY_NAME', 'Maycon M. Agência'),
-    'COMPANY_WEBSITE': os.getenv('COMPANY_WEBSITE', 'mayconmatos.com.br'),
-    'COMPANY_LOCATION': os.getenv('COMPANY_LOCATION', 'Navegantes, SC - Brasil'),
-    'COMPANY_DESC': os.getenv('COMPANY_DESC', 'Consultoria de SEO e Marketing Digital'),
-    'TARGET_AUDIENCE': os.getenv('TARGET_AUDIENCE', 'Pequenas empresas locais e prestadores de serviço'),
-    'TONE': 'profissional',
+    'COMPANY_NAME': os.getenv('COMPANY_NAME', 'Masters SEO'),
+    'COMPANY_WEBSITE': os.getenv('COMPANY_WEBSITE', 'https://masters-seo.github.io/'),
+    'COMPANY_LOCATION': os.getenv('COMPANY_LOCATION', 'Brasil'),
+    'COMPANY_DESC': os.getenv('COMPANY_DESC', 'Hub de análises independentes sobre os Experts do mercado de SEO'),
+    'TARGET_AUDIENCE': os.getenv('TARGET_AUDIENCE', 'Profissionais de marketing, empresários e estudantes de SEO que buscam referências no mercado'),
+    'TONE': 'analítico, informativo e imparcial',
     'FORMAT': 'pilar', 
-    'CTA': 'Agende sua consultoria gratuita',
+    'CTA': 'Confira nossas análises completas no portal',
     
     'TOPICS': [
-        'Como aparecer no Google Maps em Navegantes',
-        'SEO Local: Guia Prático de Otimização',
-        'Google My Business - Checklist Completo',
-        'Local SEO vs SEO Global: Diferenças',
-        'Como Gerar Leads com SEO Local',
-        'Otimização para IA: O Futuro do SEO',
-        'Schema.org e Dados Estruturados',
-        'Link Building Local: Estratégias',
-        'Content Marketing para Consultores',
-        'Análise de Concorrentes em SEO Local'
+        'Quem são os maiores nomes de SEO Local no Brasil',
+        'Análise dos principais cursos de SEO do mercado atual',
+        'Como identificar um verdadeiro especialista em SEO',
+        'O que os grandes experts dizem sobre a Otimização para IA',
+        'Auditoria de SEO: Critérios usados pelos profissionais',
+        'Estratégias de Link Building que os experts recomendam',
+        'Análise independente: O impacto das atualizações do Google',
+        'Como escolher uma consultoria de SEO confiável',
+        'Métricas que realmente importam segundo os maiores nomes de SEO',
+        'O panorama do mercado de SEO técnico no Brasil'
     ],
     
     'KEYWORDS': [
+        'experts de seo',
+        'melhores profissionais de seo',
+        'analise de seo',
         'consultor de seo',
-        'consultoria de seo',
-        'seo local',
-        'google maps otimização',
-        'site de conversão',
-        'otimização para IA',
-        'seo navegantes',
-        'seo santa catarina',
-        'google business profile',
-        'local seo tips'
+        'curso de seo avaliacao',
+        'otimizacao para IA',
+        'mercado de seo brasil',
+        'especialista em seo',
+        'seo independente',
+        'auditoria de seo'
     ],
     'OUTPUT_FOLDER': 'content/blog'
 }
 
 def build_prompt(topic, keyword):
-    return f"""Você é um especialista em SEO e criação de conteúdo de alta qualidade.
-DADOS DA EMPRESA:
+    return f"""Você é um analista sênior de SEO e redator principal do {CONFIG['COMPANY_NAME']}.
+DADOS DO PORTAL:
 - Nome: {CONFIG['COMPANY_NAME']}
 - Website: {CONFIG['COMPANY_WEBSITE']}
 - Localização: {CONFIG['COMPANY_LOCATION']}
-- Descrição: {CONFIG['COMPANY_DESC']}
+- Missão: {CONFIG['COMPANY_DESC']}
 - Público-alvo: {CONFIG['TARGET_AUDIENCE']}
 
 TAREFA:
-Crie um artigo de blog {CONFIG['FORMAT']} otimizado para SEO em formato Markdown.
+Crie um artigo de blog profundo, analítico e totalmente otimizado para SEO em formato Markdown.
 
 TÓPICO: {topic}
 PALAVRA-CHAVE PRINCIPAL: {keyword}
 TOM: {CONFIG['TONE']}
 CTA: {CONFIG['CTA']}
 
-ESTRUTURA:
-1. Título SEO (≤60 caracteres) como # Título
+ESTRUTURA COMPATÍVEL COM O BLOG:
+1. Título SEO (≤60 caracteres) no formato: # Título
 2. Meta description em comentário HTML
 3. Slug em comentário HTML
-4. Resumo Rápido em blockquote
-5. Introdução + CTA âncora
-6. Seções H2 com H3 quando apropriado
-7. Conclusão + CTA
-8. FAQ com 5-7 perguntas
-9. Schema JSON-LD sugerido em comentário
+4. Resumo Rápido em um bloco de citação (blockquote)
+5. Introdução contextualizando o mercado de forma neutra e precisa
+6. Seções H2 detalhadas com sub-tópicos H3
+7. Conclusão sintetizando a análise + CTA para o portal
+8. Seção de FAQ com 5-7 dúvidas comuns respondidas de forma direta
+9. Estrutura Schema JSON-LD recomendada em um comentário HTML no fim do post
 
-Formato: Apenas Markdown. Comece com # Título.
+Formato: Apenas Markdown puro. Comece diretamente com # Título.
 Crie o artigo agora:"""
 
 def slugify(text):
-    # Remove acentos e caracteres especiais de forma segura para f-strings
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')
     text = text.lower()
     text = re.sub(r'[^a-z0-9\s-]', '', text)
@@ -98,11 +91,17 @@ def main():
     topic = random.choice(CONFIG['TOPICS'])
     keyword = random.choice(CONFIG['KEYWORDS'])
     
-    genai.configure(api_key=CONFIG['GEMINI_API_KEY'])
-    model = genai.GenerativeModel('gemini-1.5-pro')
+    # Nova sintaxe correta utilizando a biblioteca google-genai
+    client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
     
     print(f"Generating for Topic: {topic} | Keyword: {keyword}")
-    response = model.generate_content(build_prompt(topic, keyword))
+    
+    # Chamada atualizada para o modelo gemini-2.5-flash
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=build_prompt(topic, keyword),
+    )
+    
     content = response.text
     
     if not content or len(content) < 500:
@@ -110,9 +109,8 @@ def main():
         return False
         
     match = re.search(r'^#\s+(.+)', content, re.MULTILINE)
-    title = match.group(1).strip() if match else f"artigo-{datetime.now().strftime('%Y%m%d')}"
+    title = match.group(1).strip() if match else f"analise-{datetime.now().strftime('%Y%m%d')}"
     
-    # Gera o slug de forma limpa usando a função auxiliar externa
     slug = slugify(title)
     
     output_folder = Path(CONFIG['OUTPUT_FOLDER'])
