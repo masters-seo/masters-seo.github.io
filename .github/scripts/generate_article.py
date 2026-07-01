@@ -15,8 +15,16 @@ CONFIG = {
     'COMPANY_WEBSITE': os.getenv('COMPANY_WEBSITE', 'https://masters-seo.github.io/'),
     'OUTPUT_FOLDER': '_posts',
     
-    # Mantenha em 'personalizada' para usar sua imagem com título e faixa preta
-    'MODO_IMAGEM': 'personalizada', 
+    # -------------------------------------------------------------------------
+    # 🎛️ SEU PAINEL DE CONTROLE DE IMAGENS:
+    # Mude para uma das 3 palavras abaixo para alternar o modo do seu blog:
+    # 'nenhuma'          -> Modo 1: Artigo sem imagem de destaque
+    # 'unsplash'         -> Modo 2: Imagem aleatória de banco de dados
+    # 'personalizada'    -> Modo 3: Sua imagem padrão + Título com faixa preta
+    # -------------------------------------------------------------------------
+    'MODO_IMAGEM': 'unsplash', 
+    
+    # URL da sua imagem padrão de fundo para o Modo 3 (Pode alterar para qualquer link)
     'URL_IMAGEM_PADRAO': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&auto=format&fit=crop&q=80',
     
     'TOPICS': [
@@ -25,7 +33,7 @@ CONFIG = {
         'Como identificar um verdadeiro especialista em SEO',
         'O que os grandes experts dizem sobre a Otimização para IA',
         'Auditoria de SEO: Critérios usados pelos profissionais',
-        'Estratégias de Link Building que os experts recomendam',
+        'Estrategias de Link Building que os experts recomendam',
         'Análise independente: O impacto das atualizações do Google',
         'Como escolher uma consultoria de SEO confiável',
         'Métricas que realmente importam segundo os maiores nomes de SEO',
@@ -34,28 +42,35 @@ CONFIG = {
     'KEYWORDS': [
         'experts de seo', 'melhores profissionais de seo', 'analise de seo', 
         'consultor de seo', 'curso de seo avaliacao', 'otimizacao para IA'
+    ],
+    'UNSPLASH_POOL': [
+        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60',
+        'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=60',
+        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=60',
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=60',
+        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'
     ]
 }
 
 def build_prompt(topic, keyword):
     return f"""Você é um Copywriter Sênior de Resposta Direta e Analista Principal do {CONFIG['COMPANY_NAME']}.
-Crie um artigo de autoridade, profundo e focado em converter e educar o mercado de marketing e empresários.
+Crie um artigo de autoridade profunda, altamente persuasivo, claro e totalmente otimizado para SEO semântico.
 
 TÓPICO: {topic}
 PALAVRA-CHAVE PRINCIPAL: {keyword}
 
-DIRETRIZES RÍGIDAS DE ESCRITA (Framework Copywriting Avançado):
-1. ESCANEABILIDADE: Escreva em parágrafos muito curtos. Cada parágrafo deve ter no MÁXIMO 2 a 3 linhas. Quebre o texto com frequência para manter a leitura fluida e prazerosa no mobile.
-2. TOM: Analítico, informativo, premium e imparcial. Evite termos clichês, exagerados ou excessivamente comerciais ("revolucionário", "descubra o segredo", etc.).
-3. ESTRUTURA EDITORIAL:
-   - Comece direto no conteúdo (introdução curta com gancho forte).
-   - Use intertítulos H2 e H3 claros e focados no benefício da leitura.
-   - Sempre adicione elementos visuais de texto como: listas úteis com bullet points, analogias simples ou tabelas comparativas se couber no tema.
-   - Conclusão sintetizando a análise prática + CTA discreto convidando a ler as demais auditorias do portal {CONFIG['COMPANY_WEBSITE']}.
-   - Seção FAQ contendo de 5 a 7 perguntas reais que o público busca sobre o tema com respostas curtas e diretas.
-   - No final absoluto do arquivo, inclua uma sugestão de marcação estruturada Schema JSON-LD relevante em formato de comentário HTML ().
+DIRETRIZES OBRIGATÓRIAS DE ESCRITA:
+1. ESCANEABILIDADE MÁXIMA: Escreva o artigo utilizando parágrafos muito curtos. Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente para garantir uma leitura fluida no ambiente mobile.
+2. TOM EDITORIAL: Premium, analítico e imparcial. Elimine adjetivos vazios ou clichês comerciais espalhafatosos ("revolucionário", "incrível", "mágico").
+3. ESTRUTURA REQUERIDA:
+   - Inicie o texto diretamente no conteúdo através de uma introdução marcante.
+   - Divida o conteúdo por meio de intertítulos estruturados em H2 e H3 baseados em benefícios reais.
+   - Enriqueça a leitura utilizando tabelas comparativas, listas com marcadores (bullet points) ou analogias práticas sempre que fizer sentido para explicar o tópico de forma simples.
+   - Desenvolva uma conclusão amarrando os dados apresentados, seguida de uma chamada para ação (CTA) sutil direcionando o leitor a explorar as demais análises no portal {CONFIG['COMPANY_WEBSITE']}.
+   - Apresente uma seção robusta de FAQ contendo entre 5 e 7 dúvidas reais e frequentes sobre o tema, com respostas diretas e curtas.
+   - Ao final completo do texto, insira uma sugestão técnica de marcação de dados estruturados Schema JSON-LD dentro de uma seção comentada em código HTML ().
 
-IMPORTANTE: Forneça apenas o Markdown puro do artigo. Não inclua blocos de metadados Front Matter (---), pois o sistema irá gerá-los de forma externa."""
+IMPORTANTE: Devolva exclusivamente o código estruturado em Markdown do artigo. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta, pois eles já são gerenciados dinamicamente pelo sistema."""
 
 def slugify(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8').lower()
@@ -95,7 +110,7 @@ def gerar_imagem_com_texto(titulo, slug):
                 linha_atual = test_linha
             else:
                 linhas.append(linha_atual)
-                linha_atual = palabra
+                linha_atual = palavra
         linhas.append(linha_atual)
         
         draw_txt = ImageDraw.Draw(overlay)
@@ -119,7 +134,7 @@ def gerar_imagem_com_texto(titulo, slug):
             
         return f"/{final_img_path}"
     except Exception as e:
-        print(f"⚠️ Erro ao gerar imagem customizada: {e}")
+        print(f"⚠️ Erro ao gerar imagem customizada: {e}. Usando fallback.")
         return CONFIG['URL_IMAGEM_PADRAO']
 
 def main():
@@ -146,20 +161,27 @@ def main():
     slug = slugify(topic)
     today_str = datetime.now().strftime('%Y-%m-%d')
     
-    # Define a URL da imagem baseada na regra do Modo 3
-    img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
+    # Geração automatizada do Alt Text amigável utilizando a palavra-chave ativa
+    alt_text_clean = f"Análise editorial focada em {keyword} abordando {topic} - Portal {CONFIG['COMPANY_NAME']}"
     
-    # Geração automatizada do Alt Text amigável usando a palavra-chave sorteada
-    alt_text_clean = f"Análise sobre {topic} focando em {keyword} - Portal Masters SEO"
+    modo = CONFIG['MODO_IMAGEM'].lower()
+    image_meta = ""
     
-    # Front Matter do Jekyll expandido com suporte nativo a caminhos de imagem e Alt Text otimizado
+    if modo == 'unsplash':
+        img_url = random.choice(CONFIG['UNSPLASH_POOL'])
+        image_meta = f"""\nimage:
+  path: {img_url}
+  alt: "{alt_text_clean}"""
+    elif modo == 'personalizada':
+        img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
+        image_meta = f"""\nimage:
+  path: {img_url}
+  alt: "{alt_text_clean}"""
+    
     jekyll_front_matter = f"""---
 layout: post
 title: "{title_clean}"
-date: {today_str} 12:00:00 -0300
-image:
-  path: {img_url}
-  alt: "{alt_text_clean}"
+date: {today_str} 12:00:00 -0300{image_meta}"
 ---
 
 """
@@ -172,7 +194,7 @@ image:
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(final_markdown)
         
-    print(f"✅ Artigo Jekyll gerado de acordo com as diretrizes em: {file_path}")
+    print(f"✅ Artigo Jekyll salvo com sucesso em: {file_path}")
     return True
 
 if __name__ == '__main__':
