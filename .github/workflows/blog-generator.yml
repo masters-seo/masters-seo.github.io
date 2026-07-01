@@ -18,13 +18,13 @@ jobs:
         with:
           python-version: '3.11'
       
-      # PASSO 1: Instala todas as dependências necessárias antes de rodar qualquer script
+      # PASSO 1: Instala todas as dependências necessárias antes de rodar o Python
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install google-genai requests pillow youtube-transcript-api
       
-      # PASSO 2: Roda o gerador com as variáveis de ambiente corretas
+      # PASSO 2: Roda o gerador com TODAS as suas variáveis originais mapeadas
       - name: Generate article
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
