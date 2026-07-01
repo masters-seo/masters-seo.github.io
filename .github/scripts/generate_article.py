@@ -23,7 +23,7 @@ CONFIG = {
         'O que os grandes experts dizem sobre a Otimização para IA',
         'Auditoria de SEO: Critérios usados pelos profissionais',
         'Estratégias de Link Building que os experts recomendam',
-        'Análise independente: O impacto das atualizações do Google',
+        'Análise independente: O impacto das updates do Google',
         'Como escolher uma consultoria de SEO confiável',
         'Métricas que realmente importam segundo os maiores nomes de SEO',
         'O panorama do mercado de SEO técnico no Brasil'
@@ -88,11 +88,10 @@ DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT (Framework Copywriting Avançado):
    - CONCLUSÃO E CTA: Conclusão amarrada seguidos de uma chamada para ação sutil direcionando o leitor a explorar as análises no portal {CONFIG['COMPANY_WEBSITE']}.
    - FAQ: Seção robusta contendo entre 5 e 7 dúvidas frequentes, com respostas diretas e curtas.
    - SCHEMA JSON-LD OCULTO: Ao final completo do arquivo, gere o código estruturado Schema JSON-LD (do tipo Article) inteiramente embutido dentro de um comentário HTML padrão para que ele fique invisível na tela para o usuário, mas acessível ao robô do Google, exatamente assim:
-     <!--
-     <script type="application/ld+json">
-     ...conteúdo do json aqui...
-     </script>
-     -->
+     IMPORTANTE SOBRE METADADOS DE SEO DO ARTIGO:
+Você deve OBRIGATORIAMENTE analisar o Tópico e o Conteúdo gerado para definir inteligentemente duas propriedades cruciais no início do texto (escreva as duas linhas de forma normal no topo da sua resposta para que o script capture):
+1. CATEGORIA: Escolha estritamente APENAS UMA entre estas 6 opções que melhor se adapta contextualmente ao assunto: Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA. Escreva exatamente no formato: 'CATEGORIA_SELECIONADA: Sua Categoria Aqui'.
+2. TAGS: Defina exatamente 3 tags curtas e estratégicas em minúsculas que complementem e façam sentido direto para o artigo. Escreva no formato: 'TAGS_SELECIONADAS: tag1, tag2, tag3'.
 
 IMPORTANTE: Devolva exclusivamente o código estruturado em Markdown do artigo. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta."""
 
@@ -134,12 +133,12 @@ def gerar_imagem_com_texto(titulo, slug):
         linhas = []
         linha_atual = ""
         for palavra in palavras:
-            test_linha = f"{linha_atual} {palabra}".strip()
+            test_linha = f"{linha_atual} {palavra}".strip()
             if len(test_linha) * (faixa_altura * 0.18) < W - 60:
                 linha_atual = test_linha
             else:
                 linhas.append(linha_atual)
-                linha_atual = palabra
+                linha_atual = palavra
         linhas.append(linha_atual)
         
         draw_txt = ImageDraw.Draw(overlay)
@@ -198,6 +197,18 @@ def main():
         print("❌ Conteúdo gerado é inválido ou curto demais.")
         return False
         
+    # Extração inteligente da Categoria e das Tags baseadas no contexto analisado pela IA
+    category_match = re.search(r"CATEGORIA_SELECIONADA:\s*(.+)", content)
+    tags_match = re.search(r"TAGS_SELECIONADAS:\s*(.+)", content)
+    
+    selected_category = category_match.group(1).strip() if category_match else "Análises"
+    selected_tags = tags_match.group(1).strip() if tags_match else "seo, marketing-digital, otimizacao"
+    
+    # Limpa as tags de controle do topo para não poluírem o texto visível do artigo
+    content = re.sub(r"CATEGORIA_SELECIONADA:.*\n?", "", content)
+    content = re.sub(r"TAGS_SELECIONADAS:.*\n?", "", content)
+    content = content.strip()
+        
     modo = CONFIG['MODO_IMAGEM'].lower()
     image_meta = ""
     
@@ -211,7 +222,9 @@ def main():
     jekyll_front_matter = f"""---
 layout: post
 title: '{title_clean}'
-date: {today_str} 12:00:00 -0300{image_meta}
+date: {today_str} 12:00:00 -0300
+categories: '{selected_category}'
+tags: [{selected_tags}]{image_meta}
 ---
 
 """
