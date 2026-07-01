@@ -43,7 +43,7 @@ CONFIG = {
         'seo independente',
         'auditoria de seo'
     ],
-    'OUTPUT_FOLDER': 'content/blog'
+    'OUTPUT_FOLDER': '_posts'  # Alterado de 'content/blog' para '_posts' (Padrão Jekyll)
 }
 
 def build_prompt(topic, keyword):
@@ -56,7 +56,7 @@ DADOS DO PORTAL:
 - Público-alvo: {CONFIG['TARGET_AUDIENCE']}
 
 TAREFA:
-Crie um artigo de blog profundo, analítico e totalmente otimizado para SEO em formato Markdown.
+Crie um artigo de blog profundo, analítico e totalmente otimizado para SEO em formato Markdown para o Jekyll.
 
 TÓPICO: {topic}
 PALAVRA-CHAVE PRINCIPAL: {keyword}
@@ -91,12 +91,10 @@ def main():
     topic = random.choice(CONFIG['TOPICS'])
     keyword = random.choice(CONFIG['KEYWORDS'])
     
-    # Nova sintaxe correta utilizando a biblioteca google-genai
     client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
     
     print(f"Generating for Topic: {topic} | Keyword: {keyword}")
     
-    # Chamada atualizada para o modelo gemini-2.5-flash
     response = client.models.generate_content(
         model='gemini-2.5-flash',
         contents=build_prompt(topic, keyword),
@@ -113,10 +111,14 @@ def main():
     
     slug = slugify(title)
     
+    # Formata a data de hoje no padrão exigido pelo Jekyll: ANO-MES-DIA
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    
     output_folder = Path(CONFIG['OUTPUT_FOLDER'])
     output_folder.mkdir(parents=True, exist_ok=True)
     
-    file_path = output_folder / f"{slug}.md"
+    # Nome do arquivo agora inclui a data no início (Ex: 2026-07-01-nome-do-post.md)
+    file_path = output_folder / f"{today_str}-{slug}.md"
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(content)
         
