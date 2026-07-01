@@ -7,7 +7,6 @@ import requests
 from datetime import datetime
 from pathlib import Path
 from google import genai
-from PIL import Image, ImageDraw, ImageFont
 
 CONFIG = {
     'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY', ''),
@@ -33,7 +32,7 @@ CONFIG = {
         'Como identificar um verdadeiro especialista em SEO',
         'O que os grandes experts dizem sobre a Otimização para IA',
         'Auditoria de SEO: Critérios usados pelos profissionais',
-        'Estrategias de Link Building que os experts recomendam',
+        'Estratégias de Link Building que os experts recomendam',
         'Análise independente: O impacto das atualizações do Google',
         'Como escolher uma consultoria de SEO confiável',
         'Métricas que realmente importam segundo os maiores nomes de SEO',
@@ -59,7 +58,7 @@ Crie um artigo de autoridade profunda, altamente persuasivo, claro e totalmente 
 TÓPICO: {topic}
 PALAVRA-CHAVE PRINCIPAL: {keyword}
 
-DIRETRIZES OBRIGATÓRIAS DE ESCRITA:
+DIRETRIZES OBRIGATÓRIAS DE ESCRITA (Framework Copywriting Avançado):
 1. ESCANEABILIDADE MÁXIMA: Escreva o artigo utilizando parágrafos muito curtos. Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente para garantir uma leitura fluida no ambiente mobile.
 2. TOM EDITORIAL: Premium, analítico e imparcial. Elimine adjetivos vazios ou clichês comerciais espalhafatosos ("revolucionário", "incrível", "mágico").
 3. ESTRUTURA REQUERIDA:
@@ -78,6 +77,13 @@ def slugify(text):
     return re.sub(r'[\s-]+', '-', text).strip('-')
 
 def gerar_imagem_com_texto(titulo, slug):
+    # Importações isoladas aqui dentro para evitar que o script quebre globalmente por falta de dependências locais
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError:
+        print("⚠️ Biblioteca 'Pillow' não instalada. Usando fallback da imagem padrão.")
+        return CONFIG['URL_IMAGEM_PADRAO']
+
     try:
         img_data = requests.get(CONFIG['URL_IMAGEM_PADRAO']).content
         img_path = Path("temp_base.jpg")
@@ -104,13 +110,13 @@ def gerar_imagem_com_texto(titulo, slug):
         palavras = titulo.split()
         linhas = []
         linha_atual = ""
-        for palavra in palavras:
-            test_linha = f"{linha_atual} {palavra}".strip()
+        for palabra in palavras:
+            test_linha = f"{linha_atual} {palabra}".strip()
             if len(test_linha) * (faixa_altura * 0.18) < W - 60:
                 linha_atual = test_linha
             else:
                 linhas.append(linha_atual)
-                linha_atual = palavra
+                linha_atual = palabra
         linhas.append(linha_atual)
         
         draw_txt = ImageDraw.Draw(overlay)
@@ -161,7 +167,7 @@ def main():
     slug = slugify(topic)
     today_str = datetime.now().strftime('%Y-%m-%d')
     
-    # Geração automatizada do Alt Text amigável utilizando a palavra-chave ativa
+    # Geração do Alt Text amigável utilizando a palavra-chave ativa
     alt_text_clean = f"Análise editorial focada em {keyword} abordando {topic} - Portal {CONFIG['COMPANY_NAME']}"
     
     modo = CONFIG['MODO_IMAGEM'].lower()
@@ -181,7 +187,7 @@ def main():
     jekyll_front_matter = f"""---
 layout: post
 title: "{title_clean}"
-date: {today_str} 12:00:00 -0300{image_meta}"
+date: {today_str} 12:00:00 -0300{image_meta}
 ---
 
 """
