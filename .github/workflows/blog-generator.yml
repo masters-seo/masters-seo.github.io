@@ -26,10 +26,10 @@ jobs:
       - name: Generate article
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          COMPANY_NAME: "Maycon M. Agência"
-          COMPANY_WEBSITE: "mayconmatos.com.br"
-          COMPANY_LOCATION: "Navegantes, SC - Brasil"
-          COMPANY_DESC: "Consultoria de SEO e Marketing Digital especializada em SEO Local"
+          COMPANY_NAME: "Masters SEO"
+          COMPANY_WEBSITE: "https://masters-seo.github.io/"
+          COMPANY_LOCATION: "Brasil"
+          COMPANY_DESC: "Hub de análises independentes sobre os Experts do mercado de SEO"
         run: |
           python .github/scripts/generate_article.py
       
