@@ -51,29 +51,25 @@ def build_prompt(topic, keyword):
 DADOS DO PORTAL:
 - Nome: {CONFIG['COMPANY_NAME']}
 - Website: {CONFIG['COMPANY_WEBSITE']}
-- Localização: {CONFIG['COMPANY_LOCATION']}
 - Missão: {CONFIG['COMPANY_DESC']}
-- Público-alvo: {CONFIG['TARGET_AUDIENCE']}
 
 TAREFA:
 Crie um artigo de blog profundo, analítico e totalmente otimizado para SEO em formato Markdown para o Jekyll.
 
-IMPORTANTE: Não comece com o título em formato "# Título". Comece escrevendo o artigo direto a partir da introdução.
+IMPORTANTE: Não crie cabeçalhos com --- ou metadados de layout. Comece o texto diretamente.
 
 TÓPICO: {topic}
 PALAVRA-CHAVE PRINCIPAL: {keyword}
 TOM: {CONFIG['TONE']}
 CTA: {CONFIG['CTA']}
 
-ESTRUTURA COMPATÍVEL COM O BLOG:
-1. Meta description em comentário HTML
-2. Slug em comentário HTML
-3. Resumo Rápido em um bloco de citação (blockquote)
-4. Introdução contextualizando o mercado de forma neutra e precisa
-5. Seções H2 detalhadas com sub-tópicos H3
-6. Conclusão sintetizando a análise + CTA para o portal
-7. Seção de FAQ com 5-7 dúvidas comuns respondidas de forma direta
-8. Estrutura Schema JSON-LD recomendada em um comentário HTML no fim do post
+ESTRUTURA:
+1. Resumo Rápido em um bloco de citação (blockquote)
+2. Introdução contextualizando o mercado
+3. Seções H2 detalhadas com sub-tópicos H3
+4. Conclusão sintetizando a análise + CTA para o portal
+5. Seção de FAQ com 5-7 dúvidas comuns respondidas de forma direta
+6. Estrutura Schema JSON-LD recomendada em um comentário HTML no fim do post
 
 Formato: Apenas Markdown puro."""
 
@@ -100,23 +96,17 @@ def main():
         contents=build_prompt(topic, keyword),
     )
     
-    content = response.text
+    content = response.text.strip()
     if not content or len(content) < 500:
         print("❌ Conteúdo gerado inválido.")
         return False
         
     title_clean = f"{topic} - Análise Especializada"
     slug = slugify(topic)
-    
     today_str = datetime.now().strftime('%Y-%m-%d')
     
-    # Cabeçalho simplificado e universal para temas Jekyll (removida categorização restritiva)
-    jekyll_front_matter = f"""---
-layout: post
-title: "{title_clean}"
----
-
-"""
+    # Monta o cabeçalho estrito do Jekyll sem quebras de linha iniciais
+    jekyll_front_matter = f"---\nlayout: post\ntitle: \"{title_clean}\"\n---\n\n"
     
     final_markdown = jekyll_front_matter + content
     
