@@ -18,11 +18,13 @@ jobs:
         with:
           python-version: '3.11'
       
+      # PASSO 1: Instala todas as dependências necessárias antes de rodar qualquer script
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install google-genai requests
+          pip install google-genai requests pillow youtube-transcript-api
       
+      # PASSO 2: Roda o gerador com as variáveis de ambiente corretas
       - name: Generate article
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -33,20 +35,11 @@ jobs:
         run: |
           python .github/scripts/generate_article.py
       
-     - name: Commit changes
+      # PASSO 3: Salva os posts criados e as imagens geradas no repositório
+      - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add _posts/*.md || true
           git add assets/img/posts/*.jpg || true
           git diff --quiet && git diff --staged --quiet || (git commit -m "Add auto-generated article and assets $(date +'%Y-%m-%d')" && git push)
-
-          - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install google-genai requests pillow
-
-          - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install google-genai requests pillow youtube-transcript-api
