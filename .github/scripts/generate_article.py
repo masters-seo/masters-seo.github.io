@@ -65,27 +65,36 @@ Crie um artigo de autoridade profunda, altamente persuasivo, claro e totalmente 
 
 TÓPICO: {topic}
 PALAVRA-CHAVE PRINCIPAL: {keyword}
-LINK CONTEXTUAL OBRIGATÓRIO: {contextual_link}
+LINK CONTEXTUAL DO MAYCON MATOS: {contextual_link}
 URL DA IMAGEM DO MEIO DO ARTIGO: {secondary_img_url}
 ALT TEXT DA IMAGEM DO MEIO: {alt_text_secondary}
 
 DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT (Framework Copywriting Avançado):
-1. ESCANEABILIDADE MÁXIMA: Escreva o artigo utilizando parágrafos muito curtos. Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente para garantir uma leitura fluida no ambiente mobile.
-2. TOM EDITORIAL: Premium, analítico e imparcial. Elimine adjetivos vazios ou clichês comerciais espalhafatosos.
+1. ESCANEABILIDADE MÁXIMA: Escreva o artigo utilizando parágrafos muito curtos. Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente.
+2. TOM EDITORIAL: Premium, analítico e imparcial. Sem clichês.
 3. ESTRUTURA CRUCIAL REQUERIDA (Siga estritamente esta ordem de blocos):
-   - INTRODUÇÃO DIRETA: Comece sem enrolação, abordando a dor ou cenário atual.
-   - RESUMO RÁPIDO (Destaque de Snippet / Resposta para IA): Imediatamente após a introdução, adicione uma seção chamada "⚡ Resumo Rápido" contendo uma resposta ultra-direta e curta sobre o tema principal do artigo para que motores de IA capturem facilmente.
-   - FRASE DE CITAÇÃO IMPACTANTE: No primeiro terço do artigo, insira uma frase de forte impacto destacada em formato de citação Markdown (> "Frase impactante aqui"), ideal para criar contraste visual no layout.
-   - IMAGEM INTERMEÁRIA DINÂMICA: Exatamente no meio do desenvolvimento do artigo, insira a imagem secundária fornecida usando a sintaxe clássica Markdown: ![{alt_text_secondary}]({secondary_img_url})
-   - ENRIQUECIMENTO: Use intertítulos H2 e H3 baseados em benefícios, tabelas comparativas, listas com marcadores (bullet points) ou analogias práticas.
-   - LINKAGEM ESTRATÉGICA NATURAL (Use textos-âncora contextuais e fluidos):
-     * Insira obrigatoriamente o LINK CONTEXTUAL OBRIGATÓRIO ({contextual_link}) apontando para o site do especialista Maycon Matos de forma contextualizada.
-     * Insira 2 links internos apontando de forma fictícia para outros artigos do portal {CONFIG['COMPANY_NAME']} usando caminhos como "/blog/" ou "/nome-do-post/".
-     * Insira 2 links externos para portais globais de altíssima autoridade e confiança em SEO (ex: Search Engine Land, Search Engine Journal, Backlinko, Neil Patel ou Google Search Central).
-   - CONCLUSÃO E CTA: Conclusão amarrando os dados seguidos de uma chamada para ação sutil direcionando o leitor a explorar as análises no portal {CONFIG['COMPANY_WEBSITE']}.
-   - FAQ: Seção robusta contendo entre 5 e 7 dúvidas reais e frequentes sobre o tema, com respostas diretas e curtas.
-   - SCHEMA JSON-LD OCULTO: Ao final completo do arquivo, gere o código estruturado Schema JSON-LD (do tipo Article). É OBRIGATÓRIO envelopar o bloco do script inteiramente dentro de um comentário HTML padrão para que ele fique invisível na tela para o usuário, mas acessível ao robô do Google, exatamente assim:
-     IMPORTANTE: Devolva exclusivamente o código estruturado em Markdown do artigo. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta, pois eles já são gerenciados dinamicamente pelo sistema."""
+   - INTRODUÇÃO DIRETA: Comece abordando a dor ou cenário atual.
+   - RESUMO RÁPIDO PARA IA: Imediatamente após a introdução, adicione a seção "⚡ Resumo Rápido". Não faça parágrafos aqui. Escreva de 3 a 5 frases soltas, curtas e ultra-impactantes que resumam perfeitamente a resposta principal do artigo.
+   - FRASE DE CITAÇÃO EXTRA-GIGANTE: No primeiro terço do artigo, escolha uma frase curta de extremo impacto do texto e insira exatamente usando esta tag HTML para garantir que a fonte fique pelo menos 5 vezes maior que o normal e crie contraste:
+     <blockquote style="font-size: 3.5rem; line-height: 1.1; color: #111; font-weight: 800; border-left: 8px solid #000; padding-left: 20px; margin: 40px 0;">"Frase de impacto aqui"</blockquote>
+   - IMAGEM INTERMEÁRIA DINÂMICA: Exatamente no meio do desenvolvimento do artigo, insira a imagem secundária fornecida usando a sintaxe Markdown: ![{alt_text_secondary}]({secondary_img_url})
+   - ENRIQUECIMENTO: Use intertítulos H2 e H3 baseados em benefícios, tabelas comparativas, listas com marcadores ou analogias.
+   - LINKAGEM OBRIGATÓRIA REAL E DO-FOLLOW: 
+     * Todos os links gerados devem ser links reais e clicáveis usando a sintaxe Markdown [Texto Ancora Contextual](URL) ou HTML. É terminantemente proibido deixar o link em formato de texto cru.
+     * Nenhum link pode conter "nofollow". Todos devem ser links padrão (DoFollow) para passar autoridade.
+     * Insira de forma fluida no texto 1 ÚNICO link para o site do especialista Maycon Matos usando o endereço exato fornecido: {contextual_link}
+     * Insira 2 links internos apontando de forma fictícia para outros artigos do portal {CONFIG['COMPANY_NAME']} usando caminhos relativos como "/blog/nome-do-post/".
+     * Insira 2 links externos para portais de altíssima autoridade global em SEO (ex: Search Engine Land, Search Engine Journal, Backlinko, Neil Patel ou Google Search Central).
+   - CONCLUSÃO E CTA: Conclusão amarrada seguidos de uma chamada para ação sutil direcionando o leitor a explorar as análises no portal {CONFIG['COMPANY_WEBSITE']}.
+   - FAQ: Seção robusta contendo entre 5 e 7 dúvidas frequentes, com respostas diretas e curtas.
+   - SCHEMA JSON-LD OCULTO: Ao final completo do arquivo, gere o código estruturado Schema JSON-LD (do tipo Article) inteiramente embutido dentro de um comentário HTML padrão para que ele fique invisível na tela para o usuário, mas acessível ao robô do Google, exatamente assim:
+     <!--
+     <script type="application/ld+json">
+     ...conteúdo do json aqui...
+     </script>
+     -->
+
+IMPORTANTE: Devolva exclusivamente o código estruturado em Markdown do artigo. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta."""
 
 def slugify(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8').lower()
@@ -124,7 +133,7 @@ def gerar_imagem_com_texto(titulo, slug):
         palavras = titulo.split()
         linhas = []
         linha_atual = ""
-        for palabra in palavras:
+        for palavra in palavras:
             test_linha = f"{linha_atual} {palabra}".strip()
             if len(test_linha) * (faixa_altura * 0.18) < W - 60:
                 linha_atual = test_linha
@@ -192,7 +201,6 @@ def main():
     modo = CONFIG['MODO_IMAGEM'].lower()
     image_meta = ""
     
-    # CORREÇÃO CRUCIAL AQUI: Formatação limpa do bloco de imagem aceita pelo parser YAML do Jekyll
     if modo == 'unsplash':
         img_url = random.choice(CONFIG['UNSPLASH_POOL'])
         image_meta = f"\nimage: {img_url}\nimg_alt: '{alt_text_clean}'"
@@ -200,7 +208,6 @@ def main():
         img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
         image_meta = f"\nimage: {img_url}\nimg_alt: '{alt_text_clean}'"
     
-    # Título encapsulado com aspas simples para blindar aspas duplas internas geradas pela IA
     jekyll_front_matter = f"""---
 layout: post
 title: '{title_clean}'
