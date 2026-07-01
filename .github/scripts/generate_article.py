@@ -15,16 +15,8 @@ CONFIG = {
     'COMPANY_WEBSITE': os.getenv('COMPANY_WEBSITE', 'https://masters-seo.github.io/'),
     'OUTPUT_FOLDER': '_posts',
     
-    # -------------------------------------------------------------------------
-    # 🎛️ SEU PAINEL DE CONTROLE DE IMAGENS:
-    # Mude para uma das 3 palavras abaixo para alternar o modo do seu blog:
-    # 'nenhuma'          -> Modo 1: Artigo sem imagem de destaque
-    # 'unsplash'         -> Modo 2: Imagem aleatória de banco de dados
-    # 'personalizada'    -> Modo 3: Sua imagem padrão + Título com faixa preta
-    # -------------------------------------------------------------------------
-    'MODO_IMAGEM': 'unsplash', 
-    
-    # URL da sua imagem padrão de fundo para o Modo 3 (Pode alterar para qualquer link)
+    # Mantenha em 'personalizada' para usar sua imagem com título e faixa preta
+    'MODO_IMAGEM': 'personalizada', 
     'URL_IMAGEM_PADRAO': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&auto=format&fit=crop&q=80',
     
     'TOPICS': [
@@ -42,20 +34,28 @@ CONFIG = {
     'KEYWORDS': [
         'experts de seo', 'melhores profissionais de seo', 'analise de seo', 
         'consultor de seo', 'curso de seo avaliacao', 'otimizacao para IA'
-    ],
-    'UNSPLASH_POOL': [
-        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'
     ]
 }
 
 def build_prompt(topic, keyword):
-    return f"""Você é o analista principal do Masters SEO.
-Tarefa: Crie um artigo analítico em Markdown sobre: "{topic}" (focado na palavra-chave: {keyword}).
-IMPORTANTE: Comece o texto direto na introdução. Não adicione cabeçalhos de metadados ou títulos com # no início."""
+    return f"""Você é um Copywriter Sênior de Resposta Direta e Analista Principal do {CONFIG['COMPANY_NAME']}.
+Crie um artigo de autoridade, profundo e focado em converter e educar o mercado de marketing e empresários.
+
+TÓPICO: {topic}
+PALAVRA-CHAVE PRINCIPAL: {keyword}
+
+DIRETRIZES RÍGIDAS DE ESCRITA (Framework Copywriting Avançado):
+1. ESCANEABILIDADE: Escreva em parágrafos muito curtos. Cada parágrafo deve ter no MÁXIMO 2 a 3 linhas. Quebre o texto com frequência para manter a leitura fluida e prazerosa no mobile.
+2. TOM: Analítico, informativo, premium e imparcial. Evite termos clichês, exagerados ou excessivamente comerciais ("revolucionário", "descubra o segredo", etc.).
+3. ESTRUTURA EDITORIAL:
+   - Comece direto no conteúdo (introdução curta com gancho forte).
+   - Use intertítulos H2 e H3 claros e focados no benefício da leitura.
+   - Sempre adicione elementos visuais de texto como: listas úteis com bullet points, analogias simples ou tabelas comparativas se couber no tema.
+   - Conclusão sintetizando a análise prática + CTA discreto convidando a ler as demais auditorias do portal {CONFIG['COMPANY_WEBSITE']}.
+   - Seção FAQ contendo de 5 a 7 perguntas reais que o público busca sobre o tema com respostas curtas e diretas.
+   - No final absoluto do arquivo, inclua uma sugestão de marcação estruturada Schema JSON-LD relevante em formato de comentário HTML ().
+
+IMPORTANTE: Forneça apenas o Markdown puro do artigo. Não inclua blocos de metadados Front Matter (---), pois o sistema irá gerá-los de forma externa."""
 
 def slugify(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8').lower()
@@ -82,7 +82,7 @@ def gerar_imagem_com_texto(titulo, slug):
         draw.rectangle(((0, y0), (W, y1)), fill=(0, 0, 0, 128))
         
         try:
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", int(faixa_altura * 0.3))
+            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", int(faixa_altura * 0.28))
         except IOError:
             font = ImageFont.load_default()
             
@@ -102,7 +102,7 @@ def gerar_imagem_com_texto(titulo, slug):
         total_texto_h = len(linhas) * int(faixa_altura * 0.35)
         current_y = y0 + (faixa_altura - total_texto_h) // 2
         
-        for linha in lines:
+        for linha in linhas:
             draw_txt.text((W // 2, current_y), linha, fill=(255, 255, 255, 255), font=font, anchor="mm")
             current_y += int(faixa_altura * 0.35)
             
@@ -119,7 +119,7 @@ def gerar_imagem_com_texto(titulo, slug):
             
         return f"/{final_img_path}"
     except Exception as e:
-        print(f"⚠️ Erro ao gerar imagem customizada: {e}. Usando fallback.")
+        print(f"⚠️ Erro ao gerar imagem customizada: {e}")
         return CONFIG['URL_IMAGEM_PADRAO']
 
 def main():
@@ -146,21 +146,20 @@ def main():
     slug = slugify(topic)
     today_str = datetime.now().strftime('%Y-%m-%d')
     
-    # Seleção inteligente do modo baseado na variável 'MODO_IMAGEM'
-    modo = CONFIG['MODO_IMAGEM'].lower()
-    image_meta = ""
+    # Define a URL da imagem baseada na regra do Modo 3
+    img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
     
-    if modo == 'unsplash':
-        img_url = random.choice(CONFIG['UNSPLASH_POOL'])
-        image_meta = f"\nimage: {img_url}"
-    elif modo == 'personalizada':
-        img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
-        image_meta = f"\nimage: {img_url}"
+    # Geração automatizada do Alt Text amigável usando a palavra-chave sorteada
+    alt_text_clean = f"Análise sobre {topic} focando em {keyword} - Portal Masters SEO"
     
+    # Front Matter do Jekyll expandido com suporte nativo a caminhos de imagem e Alt Text otimizado
     jekyll_front_matter = f"""---
 layout: post
 title: "{title_clean}"
-date: {today_str} 12:00:00 -0300{image_meta}
+date: {today_str} 12:00:00 -0300
+image:
+  path: {img_url}
+  alt: "{alt_text_clean}"
 ---
 
 """
@@ -173,7 +172,7 @@ date: {today_str} 12:00:00 -0300{image_meta}
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(final_markdown)
         
-    print(f"✅ Artigo Jekyll salvo com sucesso em: {file_path}")
+    print(f"✅ Artigo Jekyll gerado de acordo com as diretrizes em: {file_path}")
     return True
 
 if __name__ == '__main__':
