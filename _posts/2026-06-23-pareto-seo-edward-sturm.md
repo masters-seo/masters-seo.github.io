@@ -1,15 +1,14 @@
-# Pareto SEO com Edward Sturm: o que realmente importa (e o que desperdiça seu tempo)
+---
+layout: post
+title: "Pareto SEO com Edward Sturm: o que realmente importa (e o que desperdiça seu tempo)"
+categories: [SEO, Keywords, Estrutura]
+tags: [Keywords, boas-praticas, pareto, autoridade]
+---
 
 **Analista:** M. K. Hash  
 **Especialista:** Edward Sturm  
 **Área:** SEO · Estratégia de Keywords · Pareto SEO  
 **Data:** Março de 2026  
-categories: [SEO, Keywords, Estrutura]
-tags: [Keywords, boas-praticas, pareto, autoridade]
-layout: post
-
-
-
 
 ---
 
