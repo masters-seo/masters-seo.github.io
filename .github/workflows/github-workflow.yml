@@ -1,48 +1,38 @@
 name: 🚀 Auto Blog Generator
 
-# Quando rodar?
 on:
-  # Todos os dias às 9:00 AM (UTC)
   schedule:
-    - cron: '0 9 * * *'
-  
-  # Também permite rodar manualmente pelo GitHub
-  workflow_dispatch:
+    - cron: '0 9 * * *' # Roda todos os dias às 09:00 UTC
+  workflow_dispatch: # Permite execução manual
 
 jobs:
   generate-article:
     runs-on: ubuntu-latest
     
     steps:
-      # 1. Fazer checkout do repositório
       - name: Checkout repo
         uses: actions/checkout@v3
       
-      # 2. Setup Python (para executar o script de geração)
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
       
-      # 3. Instalar dependências
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install google-generativeai anthropic requests
+          pip install google-genai requests
       
-      # 4. Executar script de geração
       - name: Generate article
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
-          COMPANY_NAME: "Maycon M. Agência"
-          COMPANY_WEBSITE: "mayconmatos.com.br"
-          COMPANY_LOCATION: "Navegantes, SC - Brasil"
-          COMPANY_DESC: "Consultoria de SEO e Marketing Digital especializada em SEO Local"
+          COMPANY_NAME: "Masters SEO"
+          COMPANY_WEBSITE: "https://masters-seo.github.io/"
+          COMPANY_LOCATION: "Brasil"
+          COMPANY_DESC: "Hub de análises independentes sobre os Experts do mercado de SEO"
         run: |
           python .github/scripts/generate_article.py
       
-      # 5. Commit e push
       - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
