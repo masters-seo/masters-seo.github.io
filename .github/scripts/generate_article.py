@@ -43,7 +43,7 @@ CONFIG = {
         'seo independente',
         'auditoria de seo'
     ],
-    'OUTPUT_FOLDER': '_posts'  # Alterado de 'content/blog' para '_posts' (Padrão Jekyll)
+    'OUTPUT_FOLDER': '_posts'
 }
 
 def build_prompt(topic, keyword):
@@ -58,24 +58,24 @@ DADOS DO PORTAL:
 TAREFA:
 Crie um artigo de blog profundo, analítico e totalmente otimizado para SEO em formato Markdown para o Jekyll.
 
+IMPORTANTE: Não comece com o título em formato "# Título". Comece escrevendo o artigo direto a partir da introdução, pois eu cuidarei do título no cabeçalho do arquivo automaticamente.
+
 TÓPICO: {topic}
 PALAVRA-CHAVE PRINCIPAL: {keyword}
 TOM: {CONFIG['TONE']}
 CTA: {CONFIG['CTA']}
 
 ESTRUTURA COMPATÍVEL COM O BLOG:
-1. Título SEO (≤60 caracteres) no formato: # Título
-2. Meta description em comentário HTML
-3. Slug em comentário HTML
-4. Resumo Rápido em um bloco de citação (blockquote)
-5. Introdução contextualizando o mercado de forma neutra e precisa
-6. Seções H2 detalhadas com sub-tópicos H3
-7. Conclusão sintetizando a análise + CTA para o portal
-8. Seção de FAQ com 5-7 dúvidas comuns respondidas de forma direta
-9. Estrutura Schema JSON-LD recomendada em um comentário HTML no fim do post
+1. Meta description em comentário HTML
+2. Slug em comentário HTML
+3. Resumo Rápido em um bloco de citação (blockquote)
+4. Introdução contextualizando o mercado de forma neutra e precisa
+5. Seções H2 detalhadas com sub-tópicos H3
+6. Conclusão sintetizando a análise + CTA para o portal
+7. Seção de FAQ com 5-7 dúvidas comuns respondidas de forma direta
+8. Estrutura Schema JSON-LD recomendada em um comentário HTML no fim do post
 
-Formato: Apenas Markdown puro. Comece diretamente com # Título.
-Crie o artigo agora:"""
+Formato: Apenas Markdown puro."""
 
 def slugify(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')
@@ -101,28 +101,37 @@ def main():
     )
     
     content = response.text
-    
     if not content or len(content) < 500:
         print("❌ Conteúdo gerado inválido.")
         return False
         
-    match = re.search(r'^#\s+(.+)', content, re.MULTILINE)
-    title = match.group(1).strip() if match else f"analise-{datetime.now().strftime('%Y%m%d')}"
+    # Define o título dinamicamente com base no tópico sorteado
+    title_clean = f"{topic} - Análise Especializada"
+    slug = slugify(topic)
     
-    slug = slugify(title)
-    
-    # Formata a data de hoje no padrão exigido pelo Jekyll: ANO-MES-DIA
     today_str = datetime.now().strftime('%Y-%m-%d')
+    
+    # Cria o bloco Front Matter essencial para o Jekyll reconhecer o post
+    jekyll_front_matter = f"""---
+layout: post
+title: "{title_clean}"
+date: {today_str} 12:00:00 -0300
+categories: blog seo
+---
+
+"""
+    
+    # Une o cabeçalho oficial ao conteúdo gerado pela IA
+    final_markdown = jekyll_front_matter + content
     
     output_folder = Path(CONFIG['OUTPUT_FOLDER'])
     output_folder.mkdir(parents=True, exist_ok=True)
     
-    # Nome do arquivo agora inclui a data no início (Ex: 2026-07-01-nome-do-post.md)
     file_path = output_folder / f"{today_str}-{slug}.md"
     with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(content)
+        f.write(final_markdown)
         
-    print(f"✅ Artigo salvo com sucesso em: {file_path}")
+    print(f"✅ Artigo Jekyll salvo com sucesso em: {file_path}")
     return True
 
 if __name__ == '__main__':
