@@ -58,7 +58,7 @@ DADOS DO PORTAL:
 TAREFA:
 Crie um artigo de blog profundo, analítico e totalmente otimizado para SEO em formato Markdown para o Jekyll.
 
-IMPORTANTE: Não comece com o título em formato "# Título". Comece escrevendo o artigo direto a partir da introdução, pois eu cuidarei do título no cabeçalho do arquivo automaticamente.
+IMPORTANTE: Não comece com o título em formato "# Título". Comece escrevendo o artigo direto a partir da introdução.
 
 TÓPICO: {topic}
 PALAVRA-CHAVE PRINCIPAL: {keyword}
@@ -105,23 +105,19 @@ def main():
         print("❌ Conteúdo gerado inválido.")
         return False
         
-    # Define o título dinamicamente com base no tópico sorteado
     title_clean = f"{topic} - Análise Especializada"
     slug = slugify(topic)
     
     today_str = datetime.now().strftime('%Y-%m-%d')
     
-    # Cria o bloco Front Matter essencial para o Jekyll reconhecer o post
+    # Cabeçalho simplificado e universal para temas Jekyll (removida categorização restritiva)
     jekyll_front_matter = f"""---
 layout: post
 title: "{title_clean}"
-date: {today_str} 12:00:00 -0300
-categories: blog seo
 ---
 
 """
     
-    # Une o cabeçalho oficial ao conteúdo gerado pela IA
     final_markdown = jekyll_front_matter + content
     
     output_folder = Path(CONFIG['OUTPUT_FOLDER'])
