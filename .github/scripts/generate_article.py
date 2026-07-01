@@ -10,14 +10,8 @@ from google import genai
 CONFIG = {
     'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY', ''),
     'COMPANY_NAME': os.getenv('COMPANY_NAME', 'Masters SEO'),
-    'COMPANY_WEBSITE': os.getenv('COMPANY_WEBSITE', 'https://masters-seo.github.io/'),
-    'COMPANY_LOCATION': os.getenv('COMPANY_LOCATION', 'Brasil'),
-    'COMPANY_DESC': os.getenv('COMPANY_DESC', 'Hub de análises independentes sobre os Experts do mercado de SEO'),
-    'TARGET_AUDIENCE': os.getenv('TARGET_AUDIENCE', 'Profissionais de marketing, empresários e estudantes de SEO que buscam referências no mercado'),
-    'TONE': 'analítico, informativo e imparcial',
-    'FORMAT': 'pilar', 
-    'CTA': 'Confira nossas análises completas no portal',
-    
+    'COMPANY_WEBSITE': os.getenv('https://masters-seo.github.io/', 'https://masters-seo.github.io/'),
+    'OUTPUT_FOLDER': '_posts',
     'TOPICS': [
         'Quem são os maiores nomes de SEO Local no Brasil',
         'Análise dos principais cursos de SEO do mercado atual',
@@ -30,66 +24,42 @@ CONFIG = {
         'Métricas que realmente importam segundo os maiores nomes de SEO',
         'O panorama do mercado de SEO técnico no Brasil'
     ],
-    
     'KEYWORDS': [
-        'experts de seo',
-        'melhores profissionais de seo',
-        'analise de seo',
-        'consultor de seo',
-        'curso de seo avaliacao',
-        'otimizacao para IA',
-        'mercado de seo brasil',
-        'especialista em seo',
-        'seo independente',
-        'auditoria de seo'
+        'experts de seo', 'melhores profissionais de seo', 'analise de seo', 
+        'consultor de seo', 'curso de seo avaliacao', 'otimizacao para IA'
     ],
-    'OUTPUT_FOLDER': '_posts'
+    # Lista de imagens profissionais de tecnologia/dados/SEO para rotacionar de forma limpa
+    'IMAGES_POOL': [
+        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60', # Gráficos/SEO
+        'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=60', # Análise de dados
+        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=60', # Código/IA
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=60', # Rede/Tecnologia
+        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60', # Digital/Marketing
+        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=60'  # Dashboards
+    ]
 }
 
 def build_prompt(topic, keyword):
-    return f"""Você é um analista sênior de SEO e redator principal do {CONFIG['COMPANY_NAME']}.
-DADOS DO PORTAL:
-- Nome: {CONFIG['COMPANY_NAME']}
-- Website: {CONFIG['COMPANY_WEBSITE']}
-- Missão: {CONFIG['COMPANY_DESC']}
-
-TAREFA:
-Crie um artigo de blog profundo, analítico e totalmente otimizado para SEO em formato Markdown para o Jekyll.
-
-IMPORTANTE: Não crie cabeçalhos com --- ou metadados de layout. Comece o texto diretamente.
-
-TÓPICO: {topic}
-PALAVRA-CHAVE PRINCIPAL: {keyword}
-TOM: {CONFIG['TONE']}
-CTA: {CONFIG['CTA']}
-
-ESTRUTURA:
-1. Resumo Rápido em um bloco de citação (blockquote)
-2. Introdução contextualizando o mercado
-3. Seções H2 detalhadas com sub-tópicos H3
-4. Conclusão sintetizando a análise + CTA para o portal
-5. Seção de FAQ com 5-7 dúvidas comuns respondidas de forma direta
-6. Estrutura Schema JSON-LD recomendada em um comentário HTML no fim do post
-
-Formato: Apenas Markdown puro."""
+    return f"""Você é o analista principal do Masters SEO.
+Tarefa: Crie um artigo analítico em Markdown sobre: "{topic}" (focado na palavra-chave: {keyword}).
+IMPORTANTE: Comece o texto direto na introdução. Não adicione cabeçalhos de metadados ou títulos com # no início."""
 
 def slugify(text):
-    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')
-    text = text.lower()
+    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8').lower()
     text = re.sub(r'[^a-z0-9\s-]', '', text)
     return re.sub(r'[\s-]+', '-', text).strip('-')
 
 def main():
     if not CONFIG['GEMINI_API_KEY']:
-        print("❌ GEMINI_API_KEY não configurada nos Secrets.")
+        print("❌ GEMINI_API_KEY ausente.")
         return False
         
     topic = random.choice(CONFIG['TOPICS'])
     keyword = random.choice(CONFIG['KEYWORDS'])
+    selected_image = random.choice(CONFIG['IMAGES_POOL'])
     
     client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
-    
-    print(f"Generating for Topic: {topic} | Keyword: {keyword}")
+    print(f"Gerando artigo sobre: {topic}")
     
     response = client.models.generate_content(
         model='gemini-2.5-flash',
@@ -97,17 +67,22 @@ def main():
     )
     
     content = response.text.strip()
-    if not content or len(content) < 500:
-        print("❌ Conteúdo gerado inválido.")
+    if not content or len(content) < 300:
         return False
         
     title_clean = f"{topic} - Análise Especializada"
     slug = slugify(topic)
     today_str = datetime.now().strftime('%Y-%m-%d')
     
-    # Monta o cabeçalho estrito do Jekyll sem quebras de linha iniciais
-    jekyll_front_matter = f"---\nlayout: post\ntitle: \"{title_clean}\"\n---\n\n"
-    
+    # Adicionando o suporte a imagens que o Jekyll usa para renderizar na Home e no artigo
+    jekyll_front_matter = f"""---
+layout: post
+title: "{title_clean}"
+date: {today_str} 12:00:00 -0300
+image: {selected_image}
+---
+
+"""
     final_markdown = jekyll_front_matter + content
     
     output_folder = Path(CONFIG['OUTPUT_FOLDER'])
@@ -117,7 +92,7 @@ def main():
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(final_markdown)
         
-    print(f"✅ Artigo Jekyll salvo com sucesso em: {file_path}")
+    print(f"✅ Salvo com imagem em: {file_path}")
     return True
 
 if __name__ == '__main__':
