@@ -4,7 +4,12 @@
 **Especialista:** Edward Sturm  
 **Área:** SEO · Estratégia de Keywords · Pareto SEO  
 **Data:** Março de 2026  
-[Ver fonte original →](https://edwardsturm.com/articles/pareto-seo/)
+categories: [SEO, Keywords, Estrutura]
+tags: [Keywords, boas-praticas, pareto, autoridade]
+layout: post
+
+
+
 
 ---
 
