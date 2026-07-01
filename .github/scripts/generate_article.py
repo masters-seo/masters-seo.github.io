@@ -124,13 +124,13 @@ def gerar_imagem_com_texto(titulo, slug):
         palavras = titulo.split()
         linhas = []
         linha_atual = ""
-        for palavra in palavras:
-            test_linha = f"{linha_atual} {palavra}".strip()
+        for palabra in palavras:
+            test_linha = f"{linha_atual} {palabra}".strip()
             if len(test_linha) * (faixa_altura * 0.18) < W - 60:
                 linha_atual = test_linha
             else:
                 linhas.append(linha_atual)
-                linha_atual = palavra
+                linha_atual = palabra
         linhas.append(linha_atual)
         
         draw_txt = ImageDraw.Draw(overlay)
@@ -165,7 +165,6 @@ def main():
     keyword = random.choice(CONFIG['KEYWORDS'])
     contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
     
-    # Seleciona de forma randômica uma imagem diferente do banco para o meio do artigo
     secondary_img_url = random.choice(CONFIG['UNSPLASH_POOL'])
     
     client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
@@ -178,7 +177,6 @@ def main():
     alt_text_clean = f"Análise editorial focada em {keyword} abordando {topic} - Portal {CONFIG['COMPANY_NAME']}"
     alt_text_secondary = f"Gráfico informativo sobre estratégias de {keyword} e otimização semântica."
     
-    # Monta o prompt injetando todas as variáveis coletadas e tratadas
     prompt_final = build_prompt(topic, keyword, contextual_link, secondary_img_url, alt_text_secondary)
     
     response = client.models.generate_content(
@@ -194,20 +192,18 @@ def main():
     modo = CONFIG['MODO_IMAGEM'].lower()
     image_meta = ""
     
+    # CORREÇÃO CRUCIAL AQUI: Formatação limpa do bloco de imagem aceita pelo parser YAML do Jekyll
     if modo == 'unsplash':
         img_url = random.choice(CONFIG['UNSPLASH_POOL'])
-        image_meta = f"""\nimage:
-  path: {img_url}
-  alt: "{alt_text_clean}\""""
+        image_meta = f"\nimage: {img_url}\nimg_alt: '{alt_text_clean}'"
     elif modo == 'personalizada':
         img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
-        image_meta = f"""\nimage:
-  path: {img_url}
-  alt: "{alt_text_clean}\""""
+        image_meta = f"\nimage: {img_url}\nimg_alt: '{alt_text_clean}'"
     
+    # Título encapsulado com aspas simples para blindar aspas duplas internas geradas pela IA
     jekyll_front_matter = f"""---
 layout: post
-title: "{title_clean}"
+title: '{title_clean}'
 date: {today_str} 12:00:00 -0300{image_meta}
 ---
 
