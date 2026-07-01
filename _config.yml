@@ -83,6 +83,13 @@ cdn:
 # the avatar on sidebar, support local or CORS resources
 avatar: '/assets/img/masters-seo-logo.png'
 
+# Configurações de Favicon e Ícones da Aba do Navegador
+favicon:
+  apple_touch_icon: '/assets/img/masters-seo-favicon-96x96.png'
+  favicon_16x16: '/assets/img/masters-seo-favicon.png'
+  favicon_32x32: '/assets/img/masters-seo-favicon.png'
+  favicon_96x96: '/assets/img/masters-seo-favicon-96x96.png'
+
 # The URL of the site-wide social preview image used in SEO `og:image` meta tag.
 # It can be overridden by a customized `page.image` in front matter.
 social_preview_image: # string, local or CORS resources
