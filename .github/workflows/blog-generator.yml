@@ -37,5 +37,5 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add content/blog/*.md || true
+          git add _posts/*.md || true
           git diff --quiet && git diff --staged --quiet || (git commit -m "Add auto-generated article $(date +'%Y-%m-%d')" && git push)
