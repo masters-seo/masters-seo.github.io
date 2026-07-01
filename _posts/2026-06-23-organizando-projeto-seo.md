@@ -17,7 +17,7 @@ Aqui estão as duas opções visuais corrigidas para ver diretamente no site. Es
 
 <div style="background-color: #fce8e6; border-left: 6px solid #c5221f; padding: 15px; border-radius: 4px;">
   <h4 style="color: #c5221f; margin-top: 0; font-weight: bold; margin-bottom: 8px;">✖ O que Evitar no Projeto</h4>
-  <p style="margin: 0; color: #202124;"><strong>Análise de Especialista:</strong> Evite a criação de múltiplos repositórios isolados para cada profissional, pois isso fragmenta o Link Juice e reduz a autoridade geral do domínio principal..</p>
+  <p style="margin: 0; color: #202124;"><strong>Análise de Especialista:</strong> Evite a criação de múltiplos repositórios isolados para cada profissional, pois isso fragmenta o Link Juice e reduz a autoridade geral do domínio principal.</p>
 </div>
 
 ---
@@ -29,7 +29,7 @@ Aqui estão as duas opções visuais corrigidas para ver diretamente no site. Es
   
   <div style="margin-bottom: 20px;">
     <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #3c4043; font-size: 14px;">
-      <span><strong>Quem é Edward</strong> (20% das ações focadas em boas práticas)</span>
+      <span><strong>Quem é Edward</strong> (20% das ações focadas in boas práticas)</span>
       <span style="font-weight: bold; color: #137333;">80% de Resultado</span>
     </div>
     <div style="background-color: #e8eaed; border-radius: 4px; height: 12px; width: 100%;">
