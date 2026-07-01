@@ -18,24 +18,28 @@ jobs:
         with:
           python-version: '3.11'
       
-      # PASSO 1: Instala todas as dependências necessárias antes de rodar o Python
+      # PASSO 1: Instala todas as dependências necessárias antes de rodar o Python (Adicionado google-auth)
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install google-genai requests pillow youtube-transcript-api
+          pip install google-genai requests pillow youtube-transcript-api google-auth
       
-      # PASSO 2: Roda o gerador com TODAS as suas variáveis originais mapeadas
+      # PASSO 2: Roda o orquestrador que alterna entre os modelos diários com as variáveis protegidas
       - name: Generate article
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           COMPANY_NAME: "Masters SEO"
           COMPANY_WEBSITE: "https://masters-seo.github.io/"
           COMPANY_LOCATION: "Brasil"
           COMPANY_DESC: "Hub de análises independentes sobre os Experts do mercado de SEO"
+          # Variáveis opcionais caso configure o alerta de término de vídeos por e-mail
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
         run: |
-          python .github/scripts/generate_article.py
+          python .github/scripts/orchestrator.py
       
-      # PASSO 3: Salva os posts criados e as imagens geradas no repositório
+      # PASSO 3: Salva os posts criados e as imagens geradas no repositório (Preservado e Intacto)
       - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
