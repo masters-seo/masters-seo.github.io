@@ -263,13 +263,21 @@ def main():
         img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
         image_meta = f"\nimage: {img_url}\nimg_alt: '{alt_text_clean}'"
     
+# Verificação dinâmica do horário com base no painel de controle
+    if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False):
+        horario_post = "00:01:00"
+    else:
+        horario_post = "12:00:00"
+
     jekyll_front_matter = f"""---
 layout: post
 title: '{title_clean}'
-date: {today_str} 12:00:00 -0300
+date: {today_str} {horario_post} -0300
 categories: '{selected_category}'
 tags: [{selected_tags}]{image_meta}
 ---
+
+"""
 
 """
     final_markdown = jekyll_front_matter + content
