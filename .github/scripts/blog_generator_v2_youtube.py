@@ -83,15 +83,24 @@ CONFIG = {
 # 📝 PAUTA DO YOUTUBE: CADASTRE SEUS CANAIS E SUAS RESPECTIVAS URLS AQUI
 # =========================================================================
 YOUTUBE_DATABASE = {
-    "@youtubecanal1": [
+    "neilpatel": [
+        "https://youtu.be/H7m6myWuwII",
+        "https://www.youtube.com/watch?v=k8aFgaUTe_I",
+        "https://www.youtube.com/watch?v=WQHJcSiTc7s" ,
+        "https://www.youtube.com/watch?v=8InmhKjncoo",
+        "https://www.youtube.com/watch?v=Lt-9PB0tIUU",
+        "https://www.youtube.com/watch?v=SxTuBggWU2w",
         "https://www.youtube.com/watch?v=ExemploID1",
-        "https://www.youtube.com/watch?v=ExemploID2"
     ],
-    "@youtubecanal2": [
-        "https://www.youtube.com/watch?v=ExemploID3"
+    "@RankMath": [
+        "https://www.youtube.com/watch?v=VBRgIcXIxB0",
+        "https://www.youtube.com/watch?v=T1iqDNgkxeI",
+        "https://www.youtube.com/watch?v=sWpPqXXmi8o"
     ],
-    "@youtubecanal3": [
-        "https://www.youtube.com/watch?v=ExemploID4"
+    "@AhrefsCom": [
+        "https://www.youtube.com/watch?v=Sk8MAbD39Qw"
+        "https://www.youtube.com/watch?v=uza9GX0E2mw",
+        "https://www.youtube.com/watch?v=Y_QrXGeNfQU"
     ]
 }
 
