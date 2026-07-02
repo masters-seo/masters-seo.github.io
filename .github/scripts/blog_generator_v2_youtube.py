@@ -13,6 +13,11 @@ from google import genai
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 from youtube_transcript_api import YouTubeTranscriptApi
+# Tenta ler o painel de testes se ele existir na pasta
+try:
+    from config_testes import CONFIG_TESTES
+except ImportError:
+    CONFIG_TESTES = {}
 
 CONFIG = {
     'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY', ''),
