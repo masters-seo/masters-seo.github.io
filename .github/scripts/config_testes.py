@@ -13,7 +13,7 @@ CONFIG_TESTES = {
 
     # 🔴 BOTÃO 3: Forçar Modelo do YouTube
     # Se True, ignora o Orquestrador e roda sempre o Script V2 (Vídeos).
-    'FORCAR_MODELO_YOUTUBE': False,
+    'FORCAR_MODELO_YOUTUBE': True,
 
     # 🟡 BOTÃO 4: Desativar Indexação no Google Search Console
     # Se True, impede que o script gaste sua cota da Indexing API enquanto você faz testes.
