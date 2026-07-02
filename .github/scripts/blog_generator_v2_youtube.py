@@ -383,10 +383,17 @@ def executar_geracao_youtube():
         img_url = gerar_imagem_com_texto(titulo_video, f"{today_str}-{slug}")
         image_meta = f"\nimage: {img_url}\nimg_alt: '{alt_text_clean}'"
 
-    front_matter = f"""---
+# Verificação dinâmica do horário com base no painel de controle
+if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False):
+    horario_post = "00:01:00"
+else:
+    horario_post = "12:00:00"
+
+# Bloco front_matter atualizado
+front_matter = f"""---
 layout: post
 title: '{titulo_video} - Análise e Insights'
-date: {today_str} 12:00:00 -0300
+date: {today_str} {horario_post} -0300
 categories: '{selected_category}'
 tags: [{selected_tags}]{image_meta}
 youtube_id: {video_id_escolhido}
