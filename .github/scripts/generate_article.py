@@ -11,6 +11,11 @@ from google import genai
 # Nova biblioteca para autenticação automática com a API do Google
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
+# Tenta ler o painel de testes se ele existir na pasta
+try:
+    from config_testes import CONFIG_TESTES
+except ImportError:
+    CONFIG_TESTES = {}
 
 CONFIG = {
     'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY', ''),
