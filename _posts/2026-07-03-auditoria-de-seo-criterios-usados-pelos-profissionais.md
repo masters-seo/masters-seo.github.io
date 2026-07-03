@@ -1,179 +1,245 @@
 ---
 layout: post
 title: 'Auditoria de SEO: Critérios usados pelos profissionais - Análise Especializada'
-date: 2026-07-02 00:01:00 -0300
-categories: 'Análises'
-tags: [Auditoria SEO, SEO Técnico, Estratégia SEO]
-image: https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60
-img_alt: 'Estratégia avançada de consultor de seo discutida no portal Masters SEO'
+date: 2026-07-03 00:01:00 -0300
+categories: 'Estratégia'
+tags: [seo, otimizacao, mercado]
+image: https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=60
+img_alt: 'Estratégia avançada de melhores profissionais de seo discutida no portal Masters SEO'
 ---
 
-# Auditoria de SEO: Os Critérios Essenciais Utilizados pelos Profissionais de Alta Performance
+# Auditoria de SEO: Os Critérios Invioláveis Usados Pelos Profissionais do Mercado
 
-No dinâmico universo do marketing digital, a performance orgânica é a espinha dorsal de qualquer estratégia de sucesso. Mas como garantir que seu site não apenas exista, mas domine as buscas?
+A auditoria de SEO não é apenas uma revisão; é a espinha dorsal de qualquer estratégia digital robusta. É a bússola que orienta seu site rumo ao topo dos motores de busca.
 
-A resposta reside em uma auditoria de SEO profunda e meticulosa. Não se trata apenas de corrigir erros, mas de desvendar oportunidades ocultas.
+Em um cenário digital em constante mutação, identificar falhas e oportunidades é crucial para a sobrevivência e crescimento online.
 
-Profissionais de ponta utilizam critérios específicos, que transcendem o básico, para mapear o caminho do seu site até o topo.
+Este artigo desvenda os critérios que os especialistas mais renomados utilizam para escanear, analisar e otimizar websites. Prepare-se para uma imersão profunda.
 
-Este artigo desvendará os pilares dessa análise profissional.
+<blockquote style="font-size: 2.2rem; line-height: 1.2; color: #111; font-weight: 800; border-left: 6px solid #000; padding-left: 15px; margin: 30px 0;">"Uma auditoria de SEO profissional não é um custo, mas um investimento estratégico que redefine o sucesso do seu negócio online."</blockquote>
 
-## ⚡ Resumo Rápido
+Entender esses pilares é o primeiro passo para não apenas competir, mas dominar seu nicho. Vamos detalhar cada um deles.
 
-*   **SEO Técnico:** Garante a saúde estrutural e a rastreabilidade do site pelos mecanismos de busca.
-*   **Análise On-Page:** Otimiza o conteúdo e os elementos visíveis para relevância e autoridade.
-*   **Experiência do Usuário (UX):** Avalia a usabilidade e a satisfação do visitante no site.
-*   **Backlinks (Off-Page):** Analisa a autoridade externa e a rede de referências do domínio.
-*   **SEO Local:** Foca na otimização para buscas geolocalizadas, essencial para negócios físicos.
-*   **Análise de Concorrência:** Identifica lacunas e estratégias dos adversários para superação.
+⚡ Resumo Rápido
 
-<blockquote style="font-size: 2.2rem; line-height: 1.2; color: #111; font-weight: 800; border-left: 6px solid #000; padding-left: 15px; margin: 30px 0;">"A auditoria de SEO não é apenas um diagnóstico; é a bússola que guia seu site para o topo do Google."</blockquote>
+*   **Análise Técnica:** Fundamentos para a rastreabilidade e indexação do site.
+*   **Qualidade do Conteúdo:** Relevância, intenção de busca e otimização On-Page.
+*   **Perfil de Backlinks:** Autoridade, relevância e salubridade da rede de links.
+*   **Experiência do Usuário (UX):** Velocidade, responsividade e usabilidade.
+*   **Análise de Concorrência:** Estratégias e oportunidades frente aos rivais.
+*   **Dados Estruturados:** Implementação correta para richer results.
 
-## Os Pilares da Auditoria de SEO Profissional
+## I. Pilares da Auditoria de SEO: Critérios Técnicos Essenciais
 
-Uma auditoria de SEO vai muito além da verificação de palavras-chave. Ela é um mergulho profundo na arquitetura, conteúdo e autoridade de um site.
+A fundação de qualquer site bem-sucedido nos mecanismos de busca reside na sua saúde técnica. Ignorar este pilar é construir um castelo na areia.
 
-Cada critério é uma peça vital no quebra-cabeça da visibilidade orgânica.
+Profissionais de SEO começam pela base, garantindo que o Google possa, de fato, acessar e entender seu conteúdo.
 
-Vamos detalhar os elementos que os especialistas priorizam.
+### A. Rastreabilidade e Indexação
 
-### 1. SEO Técnico: A Fundação Digital
+É a permissão de entrada do Google em seu site. Verifica-se o `robots.txt`, `sitemap.xml`, e quaisquer bloqueios que impeçam a varredura.
 
-Este é o alicerce sobre o qual toda a estratégia de SEO é construída. Erros técnicos podem sabotar qualquer esforço de otimização.
+Erros 4xx e 5xx são rastreados para garantir que os usuários e o Google não encontrem becos sem saída.
 
-Profissionais examinam a fundo a capacidade do Google de rastrear e indexar o site.
+### B. Velocidade do Site e Core Web Vitals
 
-*   **Rastreabilidade e Indexabilidade:** Verificação de arquivos `robots.txt`, sitemaps XML e tags `noindex`. Garantir que as páginas certas são acessíveis e indexáveis.
-*   **Core Web Vitals:** Medir e otimizar métricas como LCP, FID e CLS, que impactam diretamente a experiência do usuário e o ranqueamento. Para se aprofundar, veja [como melhorar a nota do PageSpeed](/blog/como-melhorar-nota-pagespeed/).
-*   **Mobile-Friendliness:** Avaliação completa da responsividade e usabilidade em dispositivos móveis. Hoje, mobile-first indexing é a regra.
-*   **Estrutura de URLs:** Análise da clareza, relevância e hierarquia das URLs. URLs limpas e descritivas são preferenciais.
-*   **HTTPS:** Confirmação da segurança do site com certificado SSL. Um fator de ranqueamento fundamental.
-*   **Erros de Rastreamento:** Identificação e correção de erros 404, 5xx e redirecionamentos problemáticos.
-*   **Canonicalização:** Gerenciamento de conteúdo duplicado com tags canônicas para evitar penalizações.
+A performance da página é vital. Ferramentas como PageSpeed Insights e Lighthouse avaliam métricas cruciais como LCP, FID e CLS.
 
-| Critério Técnico      | Descrição Detalhada                                         | Impacto no SEO                   |
-| :-------------------- | :---------------------------------------------------------- | :------------------------------- |
-| **Sitemap XML**       | Mapa para robôs de busca encontrarem suas páginas.         | Facilita o rastreamento e indexação. |
-| **Robots.txt**        | Orienta os rastreadores sobre o que pode ser acessado.    | Evita indexação de conteúdo irrelevante. |
-| **Estrutura de URLs** | Endereços web otimizados e legíveis.                       | Ajuda na compreensão do conteúdo e ranqueamento. |
-| **HTTPS**             | Criptografia de dados entre usuário e site.               | Fator de segurança e ranqueamento. |
-| **Dados Estruturados** | Marcas de código para enriquecer resultados de busca.       | Aumenta visibilidade (rich snippets). |
+Um site lento afasta usuários e penaliza seu ranqueamento.
 
-### 2. Análise On-Page: Otimização do Conteúdo
+### C. Arquitetura da Informação e Estrutura de URLs
 
-Aqui, o foco é o conteúdo visível e os elementos de HTML que os usuários e os motores de busca interpretam em uma página específica.
+A forma como seu conteúdo é organizado impacta diretamente a navegação do usuário e a compreensão do Google. URLs claras e hierarquia lógica são indispensáveis.
 
-*   **Palavras-chave:** Pesquisa, uso e posicionamento estratégico de palavras-chave primárias e secundárias.
-*   **Meta Tags:** Otimização de títulos (Title Tags) e descrições (Meta Descriptions) para CTR (Click-Through Rate).
-*   **Cabeçalhos (H1, H2, H3):** Estruturação lógica do conteúdo com cabeçalhos relevantes e hierárquicos.
-*   **Qualidade e Profundidade do Conteúdo:** Avaliação da originalidade, relevância, utilidade e completude do material.
-*   **Otimização de Imagens:** Uso de atributos `alt` descritivos, compressão de imagens e nomes de arquivos otimizados.
-*   **Linkagem Interna:** Construção de uma teia de links internos para distribuir autoridade e melhorar a navegação.
-*   **Legibilidade:** Análise da fluidez do texto, uso de frases curtas, parágrafos concisos e listas para facilitar a leitura.
-    *   Um bom recurso para entender a profundidade dos fatores on-page é esta análise detalhada do Backlinko sobre [fatores de ranqueamento](https://backlinko.com/google-ranking-factors).
+Isso facilita tanto a experiência do usuário quanto o trabalho dos crawlers.
 
-### 3. Experiência do Usuário (UX) e Conteúdo
+### D. Dados Estruturados (Schema Markup)
 
-Um site otimizado tecnicamente e com bom conteúdo precisa, acima de tudo, ser agradável para o usuário. A UX é um critério de ranqueamento cada vez mais forte.
+A implementação de `schema markup` ajuda o Google a entender o contexto do seu conteúdo, levando a "rich snippets" nos resultados.
 
-*   **Intenção de Busca:** Alinhamento do conteúdo com o que o usuário realmente procura.
-*   **Engajamento:** Análise de métricas como tempo na página, taxa de rejeição e páginas por sessão.
-*   **Arquitetura da Informação:** Como o conteúdo está organizado e é fácil de encontrar.
-*   **Acessibilidade:** Garantir que o site seja utilizável por pessoas com diferentes capacidades.
-*   **Interatividade:** Inclusão de elementos que incentivam a interação, como formulários, comentários, etc.
-*   Aplicar princípios de conteúdo e UX é crucial, inclusive para setores como a [advocacia, na captação de clientes](/blog/advocacia/como-captar-clientes-na-advocacia/).
+Isso aumenta a visibilidade e a taxa de cliques (CTR).
 
-![Estratégias de consultor de seo](https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60)
+### E. Mobile-First Indexing
 
-### 4. Backlinks e Autoridade (Off-Page SEO)
+Com a predominância do acesso mobile, é imperativo que a versão móvel do seu site seja otimizada e responsiva. O Google prioriza essa versão para indexação.
 
-A qualidade e quantidade de links externos apontando para o seu site são um forte indicador de autoridade para o Google.
+## II. Auditoria de Conteúdo e Palavras-chave: O Coração do Engajamento
 
-*   **Perfil de Backlinks:** Análise da origem, qualidade e relevância dos domínios de referência.
-*   **Texto Âncora:** Avaliação da diversidade e relevância dos textos âncora utilizados nos backlinks.
-*   **Autoridade do Domínio (DA/DR):** Métricas que estimam a força de ranqueamento de um domínio.
-*   **Link Juice (Equidade de Link):** Entendimento de como a autoridade é passada entre os links.
-*   **Links Tóxicos:** Identificação e, se necessário, disavow de backlinks de baixa qualidade ou spam.
-*   Para aprofundar na importância de um perfil de backlinks saudável, a Search Engine Land oferece uma excelente cobertura sobre [estratégias de link building](https://searchengineland.com/guide/seo/link-building-seo).
+O conteúdo é rei, mas apenas se for relevante, útil e otimizado para a intenção do usuário.
 
-### 5. SEO Local (Quando Aplicável)
+Profissionais escrutinam cada peça de conteúdo para garantir que ela ressoe com o público-alvo e com os algoritmos.
 
-Para negócios com presença física, a otimização local é fundamental para atrair clientes da região.
+### A. Qualidade e Relevância do Conteúdo (E-E-A-T)
 
-*   **Google Meu Negócio:** Otimização completa do perfil (informações, fotos, categorias, postagens).
-*   **Citações (NAP Consistency):** Verificação da consistência de Nome, Endereço e Telefone em diretórios online.
-*   **Avaliações e Reviews:** Gerenciamento e incentivo a avaliações positivas em plataformas relevantes.
-*   **Palavras-chave Locais:** Inclusão de termos geolocalizados no conteúdo.
+Avalia-se a Expertise, Experiência, Autoridade e Confiabilidade (E-E-A-T) do conteúdo. É preciso responder às perguntas dos usuários de forma completa e precisa.
 
-### 6. Análise da Concorrência
+Conteúdo de baixa qualidade, duplicado ou desatualizado é um grande risco.
 
-Entender o que seus concorrentes fazem bem (e onde falham) é crucial para refinar sua própria estratégia.
+### B. Intenção de Busca
 
-*   **Palavras-chave Concorrentes:** Identificação de termos para os quais os concorrentes ranqueiam.
-*   **Perfil de Backlinks dos Concorrentes:** Análise das fontes de link building dos rivais.
-*   **Lacunas de Conteúdo:** Oportunidades de criar conteúdo que seus concorrentes não abordam.
-*   **Estrutura do Site Concorrente:** Insights sobre a arquitetura e usabilidade de sites de sucesso.
+Cada palavra-chave tem uma intenção subjacente. O conteúdo deve se alinhar perfeitamente a essa intenção – seja ela informacional, transacional ou navegacional.
 
-Para uma análise tão detalhada e a implementação estratégica, a expertise de uma [consultoria de SEO profissional](https://mayconmatos.com.br/servicos/consultoria/) é indispensável. Eles possuem as ferramentas e o conhecimento para transformar essas análises em resultados tangíveis.
+Desvios podem levar a altas taxas de rejeição.
 
-## Conclusão
+### C. Otimização On-Page
 
-Uma auditoria de SEO realizada por profissionais é a espinha dorsal de qualquer estratégia de sucesso no ambiente digital. Ela revela a verdade sobre a performance do seu site.
+Títulos (Title Tags), meta descrições, cabeçalhos (H1-H6), uso de palavras-chave, otimização de imagens (alt text) e links internos são revisados minuciosamente.
 
-Ao cobrir SEO técnico, on-page, experiência do usuário, backlinks, SEO local e análise de concorrência, você obtém uma visão 360 graus.
+Esta é a otimização granular que faz a diferença.
 
-Essa análise aprofundada não só corrige problemas, mas também ilumina o caminho para novas oportunidades de crescimento e liderança de mercado.
+Um consultor de SEO experiente, como o **[Maycon Matos](https://mayconmatos.com.br/consultor-de-seo-para-google-e-ia/)**, pode fornecer insights valiosos sobre a intersecção entre a otimização de conteúdo e a experiência do usuário.
 
-Não deixe sua estratégia ao acaso. Invista em uma auditoria completa para impulsionar seu sucesso online.
+### D. Lacunas de Conteúdo e Oportunidades
+
+Identificação de tópicos relevantes que o site ainda não aborda, mas que seus concorrentes exploram com sucesso.
+
+Preencher essas lacunas pode abrir novas frentes de tráfego.
+
+![Estratégias de melhores profissionais de seo](https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=60)
+
+## III. Auditoria de Backlinks (Off-Page SEO): A Autoridade Externa
+
+Backlinks de qualidade continuam sendo um dos sinais mais fortes de autoridade para o Google.
+
+Uma auditoria de backlinks revela a força e a salubridade do seu perfil de links.
+
+### A. Perfil de Backlinks
+
+Avalia-se a quantidade, qualidade, relevância e diversidade dos domínios que apontam para o seu site. Links de baixa qualidade ou spam podem ser prejudiciais.
+
+Uma análise aprofundada pode ser encontrada no guia da Backlinko sobre auditoria de SEO [neste link](https://backlinko.com/seo-audit).
+
+### B. Identificação de Backlinks Tóxicos
+
+Links de sites de baixa qualidade, irrelevantes ou penalizados podem danificar a reputação do seu domínio. Eles precisam ser identificados e, se possível, removidos ou desautorizados.
+
+Entender as [estratégias de link building que os experts recomendam](/blog/estrategias-de-link-building-que-os-experts-recomendam/) é crucial para construir um perfil saudável.
+
+### C. Análise de Concorrência (Off-Page)
+
+Examinar os perfis de backlinks dos concorrentes revela oportunidades e estratégias bem-sucedidas que podem ser emuladas ou superadas.
+
+## IV. Auditoria de Experiência do Usuário (UX): O Fator Humano
+
+O Google prioriza a experiência do usuário. Um site que é agradável e fácil de usar tende a ter melhor desempenho nos rankings.
+
+Este é um critério que se entrelaça com a análise técnica.
+
+### A. Navegabilidade e Usabilidade
+
+O quão fácil é para o usuário encontrar o que procura? A estrutura do site é intuitiva? Menus claros e chamadas para ação eficazes são vitais.
+
+Mapas de calor e gravações de sessão podem oferecer insights.
+
+### B. Responsividade Móvel
+
+Com mais da metade do tráfego vindo de dispositivos móveis, um design responsivo não é mais um diferencial, mas uma exigência básica.
+
+A experiência deve ser impecável em qualquer tela.
+
+### C. Métricas de Engajamento
+
+Taxa de rejeição, tempo na página e páginas por sessão são indicadores de quão engajados os usuários estão com seu conteúdo.
+
+Altas taxas de rejeição podem sinalizar problemas de conteúdo ou UX.
+
+## V. Análise Competitiva: O Espelho do Mercado
+
+Conhecer seus adversários é fundamental para traçar sua própria rota. A análise competitiva vai além de saber quem são eles.
+
+Ela busca entender *como* eles estão vencendo (ou perdendo).
+
+### A. Identificação de Concorrentes Diretos e Indiretos
+
+Nem sempre os concorrentes de negócio são os mesmos de SEO. É preciso identificar quem disputa as mesmas palavras-chave e espaço nos SERPs.
+
+### B. Análise de Estratégias
+
+Estuda-se as palavras-chave ranqueadas pelos concorrentes, a qualidade do conteúdo deles, a arquitetura do site e o perfil de backlinks.
+
+Isso revela oportunidades não exploradas e ameaças a serem mitigadas.
+
+É importante estar sempre atento a como as [atualizações do Google](/blog/analise-independente-o-impacto-das-atualizacoes-do-google/) afetam a paisagem competitiva e as estratégias de seus rivais.
+
+## VI. Monitoramento e Relatórios: O Ciclo de Otimização
+
+Uma auditoria não termina com as recomendações. O monitoramento contínuo e a elaboração de relatórios acionáveis são essenciais para medir o progresso.
+
+Uma boa fonte para checklists completas é o Search Engine Land, como neste artigo sobre auditoria de SEO [aqui](https://searchengineland.com/the-ultimate-seo-audit-checklist-397452).
+
+### A. Ferramentas Essenciais
+
+Google Search Console, Google Analytics 4, Semrush, Ahrefs, Screaming Frog são apenas algumas das ferramentas indispensáveis para coletar e analisar dados.
+
+A escolha e o domínio dessas ferramentas são marcas de um profissional.
+
+### B. KPIs e Métricas
+
+Definição de Key Performance Indicators (KPIs) claros e métricas relevantes para acompanhar o impacto das mudanças implementadas.
+
+Tráfego orgânico, posições de palavras-chave, taxa de cliques e conversões são alguns exemplos.
+
+### C. Recomendações Acionáveis
+
+O relatório final deve ir além de listar problemas. Ele deve oferecer um plano de ação claro, priorizado e com estimativas de impacto.
+
+É a etapa mais valiosa da auditoria.
+
+## Conclusão: O Futuro do Seu Site Começa Aqui
+
+A auditoria de SEO é uma fotografia detalhada da saúde do seu site, um mapa para o sucesso e um guia para a inovação. Ela desvenda os mistérios dos algoritmos e os anseios dos usuários.
+
+Ao aplicar os critérios profissionais descritos, você não apenas corrige falhas, mas posiciona seu negócio para um crescimento sustentável.
+
+Pronto para levar seu site ao próximo nível de performance e visibilidade? A próxima etapa é transformar esses insights em ação.
 
 ## FAQ – Perguntas Frequentes sobre Auditoria de SEO
 
-### 1. O que é uma Auditoria de SEO?
-Uma auditoria de SEO é uma análise completa de um site para identificar problemas que podem estar impedindo-o de ranquear bem nos motores de busca. Ela cobre aspectos técnicos, de conteúdo, backlinks e experiência do usuário.
+### 1. O que é uma auditoria de SEO?
+Uma auditoria de SEO é uma análise aprofundada de um website para identificar pontos fortes, fracos, oportunidades e ameaças que afetam seu desempenho nos motores de busca. Ela cobre aspectos técnicos, de conteúdo, links e experiência do usuário.
 
-### 2. Com que frequência devo realizar uma Auditoria de SEO?
-Recomenda-se uma auditoria completa pelo menos uma vez ao ano. No entanto, sites muito grandes, em nichos competitivos ou que passaram por grandes mudanças, podem se beneficiar de auditorias mais frequentes (semestrais ou trimestrais).
+### 2. Com que frequência devo realizar uma auditoria de SEO?
+Recomenda-se uma auditoria completa anualmente. No entanto, auditorias mais focadas (técnica, de conteúdo, ou de backlinks) podem ser feitas semestralmente ou após grandes atualizações do algoritmo do Google ou mudanças significativas no site.
 
-### 3. Quais são as principais ferramentas usadas em uma Auditoria de SEO?
-Profissionais utilizam ferramentas como Google Analytics, Google Search Console, SEMrush, Ahrefs, Screaming Frog, PageSpeed Insights, entre outras, para coletar dados e realizar análises.
+### 3. Quais ferramentas são essenciais para uma auditoria de SEO?
+Ferramentas cruciais incluem Google Search Console, Google Analytics 4, Semrush, Ahrefs, Screaming Frog, PageSpeed Insights, Lighthouse e Google Keyword Planner.
 
-### 4. Posso fazer uma Auditoria de SEO por conta própria?
-Para uma análise superficial, sim. No entanto, uma auditoria profunda e eficaz requer conhecimento técnico avançado, experiência e acesso a ferramentas profissionais. Uma auditoria feita por conta própria pode deixar passar problemas críticos.
+### 4. Qual a diferença entre SEO técnico e SEO On-Page em uma auditoria?
+SEO técnico foca na infraestrutura do site (rastreabilidade, indexação, velocidade, dados estruturados). SEO On-Page refere-se à otimização do conteúdo e elementos visíveis da página (títulos, meta descrições, H1s, imagens, palavras-chave). Ambos são cruciais e se complementam.
 
-### 5. Qual a diferença entre Auditoria de SEO e Consultoria de SEO?
-A auditoria é um diagnóstico, um relatório que identifica problemas e oportunidades. A consultoria é a implementação contínua das estratégias e otimizações, baseada ou não nos achados da auditoria, visando resultados de longo prazo.
+### 5. Como priorizar as recomendações de uma auditoria?
+Priorize as recomendações com base no potencial impacto (aumento de tráfego/conversões) e na facilidade de implementação. Comece com "quick wins" e problemas críticos que impedem a indexação ou rastreabilidade.
 
-### 6. Quanto tempo leva para ver os resultados de uma Auditoria de SEO?
-Os resultados podem variar. Algumas otimizações técnicas (como velocidade do site) podem mostrar impacto em semanas. Melhorias de conteúdo e backlinks levam mais tempo, geralmente meses, para consolidar um ranqueamento superior.
+### 6. Uma auditoria de SEO garante ranqueamento?
+Não há garantias absolutas em SEO, pois o ranqueamento depende de muitos fatores e da concorrência. No entanto, uma auditoria de SEO bem executada e as implementações subsequentes aumentam drasticamente as chances de melhorar o ranqueamento e a visibilidade.
 
-### 7. Por que a análise da concorrência é tão importante em uma auditoria?
-A análise da concorrência oferece insights valiosos sobre as estratégias que funcionam no seu nicho. Ela ajuda a identificar lacunas de conteúdo, oportunidades de backlinks e pontos fortes dos concorrentes a serem superados, informando sua própria estratégia.
+### 7. Quem deve realizar uma auditoria de SEO?
+Idealmente, um profissional de SEO experiente ou uma agência especializada. Eles possuem o conhecimento técnico, as ferramentas e a visão estratégica para identificar problemas complexos e oferecer soluções eficazes.
 
 <!--
 {
   "@context": "https://schema.org",
   "@type": "Article",
-  "mainEntityOfPage": {
-    "@type": "WebPage",
-    "@id": "https://www.mastersseo.com.br/blog/auditoria-seo-criterios-profissionais/"
-  },
-  "headline": "Auditoria de SEO: Os Critérios Essenciais Utilizados pelos Profissionais de Alta Performance",
-  "description": "Descubra os critérios aprofundados que profissionais de SEO de elite utilizam em suas auditorias para garantir o sucesso e a visibilidade online. Da técnica ao conteúdo, entenda cada pilar.",
-  "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60",
+  "headline": "Auditoria de SEO: Os Critérios Invioláveis Usados Pelos Profissionais do Mercado",
+  "description": "Este artigo detalha os critérios essenciais que profissionais de SEO utilizam para realizar auditorias completas, cobrindo aspectos técnicos, de conteúdo, backlinks, UX e análise competitiva.",
+  "image": "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=60",
   "author": {
-    "@type": "Person",
-    "name": "Copywriter Principal Masters SEO"
+    "@type": "Organization",
+    "name": "Masters SEO"
   },
   "publisher": {
     "@type": "Organization",
     "name": "Masters SEO",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://www.mastersseo.com.br/logo.png"
+      "url": "https://www.mastersseo.com/logo.png"
     }
   },
-  "datePublished": "2024-06-25",
-  "dateModified": "2024-06-25",
-  "keywords": "Auditoria SEO, Critérios SEO, SEO Técnico, Otimização On-Page, Backlinks, UX SEO, SEO Local, Análise de Concorrência"
+  "datePublished": "2023-10-27",
+  "dateModified": "2023-10-27",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://www.mastersseo.com/blog/auditoria-seo-criterios-profissionais/"
+  }
 }
 -->
