@@ -3,11 +3,43 @@ import os
 import sys
 import subprocess
 from datetime import datetime
+from pathlib import Path
 
 # Garante que o diretório base esteja no PATH para importar módulos
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
     sys.path.append(script_dir)
+
+# =====================================================================
+# ROTINA DE AUTOLIMPEZA CRÍTICA (Remove arquivos clonados/conflitos e cache)
+# =====================================================================
+def realizar_limpeza_de_seguranca():
+    # 1. Remove arquivos locais que possam mimetizar a biblioteca oficial
+    for nome_fantasma in ["youtube_transcript_api.py", "youtube_transcript_api"]:
+        caminho_fantasma = os.path.join(script_dir, nome_fantasma)
+        if os.path.exists(caminho_fantasma):
+            try:
+                if os.path.isdir(caminho_fantasma):
+                    import shutil
+                    shutil.rmtree(caminho_fantasma)
+                else:
+                    os.remove(caminho_fantasma)
+                print(f"🧹 [Autolimpeza]: Arquivo de conflito removido: {nome_fantasma}")
+            except Exception as e:
+                print(f"⚠️ Falha ao limpar {nome_fantasma}: {e}")
+
+    # 2. Remove caches do Python (__pycache__) para evitar que guarde o erro antigo
+    for root, dirs, files in os.walk(script_dir):
+        if "__pycache__" in dirs:
+            caminho_cache = os.path.join(root, "__pycache__")
+            try:
+                import shutil
+                shutil.rmtree(caminho_cache)
+            except:
+                pass
+
+# Executa a limpeza imediatamente antes de qualquer importação sensível
+realizar_limpeza_de_seguranca()
 
 try:
     # Tenta importar o arquivo de configuração, se não existir, usa dict vazio
