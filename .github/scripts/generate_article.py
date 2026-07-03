@@ -311,7 +311,11 @@ def main():
 
     title_clean = f"{topic} - Análise Especializada"
     slug = slugify(topic)
-    today_str = datetime.now().strftime('%Y-%m-%d')
+    from datetime import datetime, timezone, timedelta
+
+# Força o fuso horário de Brasília (UTC-3) para o cálculo da data atual
+fuso_brasil = timezone(timedelta(hours=-3))
+today_str = datetime.now(fuso_brasil).strftime('%Y-%m-%d')
 
     alt_text_clean = f"Análise editorial focada em {keyword} abordando {topic} - Portal {CONFIG['COMPANY_NAME']}"
     alt_text_secondary = f"Gráfico informativo sobre estratégias de {keyword} e otimização semântica."
