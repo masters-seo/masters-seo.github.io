@@ -14,6 +14,7 @@ from google import genai
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 import subprocess
+import traceback
 
 # Limpa o cache do Python para evitar conflitos de caminhos locais no Runner
 if 'youtube_transcript_api' in sys.modules:
@@ -76,7 +77,6 @@ CONFIG = {
     ]
 }
 
-# Adicionado um parâmetro fictício no fim da URL para forçar bypass de cache de leitura se necessário
 YOUTUBE_DATABASE = {
     "neilpatel": [
         "https://www.youtube.com/watch?v=H7m6myWuwII",
@@ -111,19 +111,17 @@ def extrair_video_id(url):
     return match.group(1) if match else None
 
 def video_ja_processado(video_id):
-    """Lógica corrigida: evita falsos positivos limpando a varredura"""
+    """Lógica de verificação estrita para evitar falsos positivos."""
     folder = Path(CONFIG['OUTPUT_FOLDER'])
     if not folder.exists():
         return False
     
-    # Se o painel de testes mandar forçar a gravação, ignora a checagem
     if CONFIG_TESTES.get('FORCAR_GRAVACAO_TESTE', False):
         return False
 
     for post in folder.glob("*.md"):
         try:
             content = post.read_text(encoding='utf-8')
-            # Verifica estritamente a tag de marcação do front-matter
             if f"youtube_id: {video_id}" in content:
                 print(f"📌 Vídeo {video_id} ignorado (Já existe no post: {post.name})")
                 return True
@@ -142,16 +140,10 @@ def obter_metadados_youtube(url):
     return None, None
 
 def obter_transcricao(video_id):
-    """Abordagem limpa e direta utilizando o fallback dinâmico do módulo"""
+    """Usa estritamente a classe correta da biblioteca oficial para extração."""
     try:
-        # Tenta utilizar o método direto da classe importada
-        try:
-            lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
-            return " ".join([item['text'] for item in lista])
-        except AttributeError:
-            # Caso o import tenha vindo encapsulado de outra forma pelo wrapper
-            lista = youtube_transcript_api.get_transcript(video_id, languages=['pt', 'en'])
-            return " ".join([item['text'] for item in lista])
+        lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
+        return " ".join([item['text'] for item in lista])
     except Exception as e:
         print(f"❌ Falha crítica na API de Transcrição para o ID {video_id}: {e}")
         return None
@@ -195,91 +187,88 @@ def solicitar_indexacao_google(target_url):
         return False
 
 def executar_geracao_youtube():
-    if not CONFIG['GEMINI_API_KEY']:
-        print("❌ GEMINI_API_KEY ausente.")
-        return False
-
-    canais_disponiveis = sorted(list(YOUTUBE_DATABASE.keys()))
-    dia_do_ano = datetime.now().timetuple().tm_yday
-    
-    canal_escolhido = None
-    video_escolhido_url = None
-    video_id_escolhido = None
-
-    print(f"🔍 Analisando banco de dados de vídeos procurando itens não publicados...")
-    for i in range(len(canais_disponiveis)):
-        idx = (dia_do_ano + i) % len(canais_disponiveis)
-        canal_candidato = canais_disponiveis[idx]
-        urls_do_canal = YOUTUBE_DATABASE[canal_candidato]
-        
-        for url in urls_do_canal:
-            v_id = extrair_video_id(url)
-            if v_id and not video_ja_processado(v_id):
-                canal_escolhido = canal_candidato
-                video_escolhido_url = url
-                video_id_escolhido = v_id
-                print(f"🎯 Vídeo Selecionado com Sucesso para Processamento: {v_id} (Canal: {canal_candidato})")
-                break
-        if video_escolhido_url:
-            break
-
-    if not video_escolhido_url:
-        print("🚨 Alerta: Nenhum vídeo novo pendente encontrado na fila do banco de dados!")
-        return False
-
-    print(f"🎬 Iniciando mineração do link: {video_escolhido_url}")
-    titulo_video, canal_autor = obter_metadados_youtube(video_escolhido_url)
-    
-    if not titulo_video:
-        titulo_video = f"Insights de SEO Avançado - Canal {canal_escolhido}"
-        canal_autor = canal_escolhido
-
-def obter_transcricao(video_id):
-    """
-    Abordagem definitiva usando estritamente a classe correta da biblioteca oficial.
-    """
     try:
-        # A classe correta com iniciais maiúsculas possui o método estático get_transcript
-        lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
-        return " ".join([item['text'] for item in lista])
-    except Exception as e:
-        print(f"❌ Falha crítica na API de Transcrição para o ID {video_id}: {e}")
-        return None
+        if not CONFIG['GEMINI_API_KEY']:
+            print("❌ GEMINI_API_KEY ausente.")
+            return False
 
-    keyword = random.choice(CONFIG['KEYWORDS'])
-    contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
-    secondary_img_url = random.choice(CONFIG['UNSPLASH_POOL'])
-    alt_text_clean = f"Mídias e estratégias de marketing digital focadas em {keyword}."
-    alt_text_secondary = f"Análise gráfica de métricas de {keyword} coletadas."
+        canais_disponiveis = sorted(list(YOUTUBE_DATABASE.keys()))
+        dia_do_ano = datetime.now().timetuple().tm_yday
+        
+        canal_escolhido = None
+        video_escolhido_url = None
+        video_id_escolhido = None
 
-    links_reais = raspar_links_da_home()
-    link_int1 = random.choice(links_reais)
-    link_int2 = random.choice([l for l in links_reais if l != link_int1] or links_reais)
+        print(f"🔍 Analisando banco de dados de vídeos procurando itens não publicados...")
+        for i in range(len(canais_disponiveis)):
+            idx = (dia_do_ano + i) % len(canais_disponiveis)
+            canal_candidato = canais_disponiveis[idx]
+            urls_do_canal = YOUTUBE_DATABASE[canal_candidato]
+            
+            for url in urls_do_canal:
+                v_id = extrair_video_id(url)
+                if v_id and not video_ja_processado(v_id):
+                    canal_escolhido = canal_candidato
+                    video_escolhido_url = url
+                    video_id_escolhido = v_id
+                    print(f"🎯 Vídeo Selecionado com Sucesso para Processamento: {v_id} (Canal: {canal_candidato})")
+                    break
+            if video_escolhido_url:
+                break
 
-    client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
-    prompt = build_youtube_prompt(titulo_video, canal_autor, transcricao, keyword, contextual_link, secondary_img_url, alt_text_secondary, link_int1, link_int2)
+        if not video_escolhido_url:
+            print("🚨 Alerta: Nenhum vídeo novo pendente encontrado na fila do banco de dados!")
+            return False
 
-    response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
-    content = response.text.strip()
+        print(f"🎬 Iniciando mineração do link: {video_escolhido_url}")
+        titulo_video, canal_autor = obter_metadados_youtube(video_escolhido_url)
+        
+        if not titulo_video:
+            titulo_video = f"Insights de SEO Avançado - Canal {canal_escolhido}"
+            canal_autor = canal_escolhido
 
-    if not content or len(content) < 300:
-        return False
+        print("🔤 Requisitando transcrição oficial do vídeo...")
+        transcricao = obter_transcricao(video_id_escolhido)
+        if not transcricao:
+            print("❌ Falha crítica: Transcrição retornou vazia ou indisponível.")
+            return False
 
-    youtube_embed_code = f"""
+        keyword = random.choice(CONFIG['KEYWORDS'])
+        contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
+        secondary_img_url = random.choice(CONFIG['UNSPLASH_POOL'])
+        alt_text_clean = f"Mídias e estratégias de marketing digital focadas em {keyword}."
+        alt_text_secondary = f"Análise gráfica de métricas de {keyword} coletadas."
+
+        links_reais = raspar_links_da_home()
+        link_int1 = random.choice(links_reais)
+        link_int2 = random.choice([l for l in links_reais if l != link_int1] or links_reais)
+
+        print("🤖 Inicializando cliente Gemini AI...")
+        client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
+        prompt = build_youtube_prompt(titulo_video, canal_autor, transcricao, keyword, contextual_link, secondary_img_url, alt_text_secondary, link_int1, link_int2)
+
+        response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+        content = response.text.strip()
+
+        if not content or len(content) < 300:
+            print("❌ Resposta do modelo de linguagem inválida ou curta demais.")
+            return False
+
+        youtube_embed_code = f"""
 <div class="youtube-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin: 35px 0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
   <iframe src="https://www.youtube.com/embed/{video_id_escolhido}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
 </div>
 <p style="font-size: 0.85rem; color: #666; text-align: center; margin-top: -20px; font-style: italic;">Vídeo Original: "{titulo_video}" por {canal_autor}. Disponibilizado via incorporação pública do YouTube para referenciamento educacional do portal.</p>
 
 """
-    content = youtube_embed_code + content
-    today_str = datetime.now().strftime('%Y-%m-%d')
-    slug = slugify(titulo_video)
-    
-    image_meta = f"\nimage: {secondary_img_url}\nimg_alt: '{alt_text_clean}'"
-    horario_post = "00:01:00" if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False) else "12:00:00"
+        content = youtube_embed_code + content
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        slug = slugify(titulo_video)
+        
+        image_meta = f"\nimage: {secondary_img_url}\nimg_alt: '{alt_text_clean}'"
+        horario_post = "00:01:00" if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False) else "12:00:00"
 
-    front_matter = f"""---
+        front_matter = f"""---
 layout: post
 title: '{titulo_video} - Análise e Insights'
 date: {today_str} {horario_post} -0300
@@ -289,19 +278,25 @@ youtube_id: {video_id_escolhido}
 ---
 
 """
-    final_markdown = front_matter + content
-    output_folder = Path(CONFIG['OUTPUT_FOLDER'])
-    output_folder.mkdir(parents=True, exist_ok=True)
-    
-    file_path = output_folder / f"{today_str}-{slug}.md"
-    with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(final_markdown)
+        final_markdown = front_matter + content
+        output_folder = Path(CONFIG['OUTPUT_FOLDER'])
+        output_folder.mkdir(parents=True, exist_ok=True)
         
-    print(f"✅ Artigo derivado com sucesso e salvo em: {file_path}")
-    solicitar_indexacao_google(f"{CONFIG['COMPANY_WEBSITE']}blog/{slug}/")
-    return True
+        file_path = output_folder / f"{today_str}-{slug}.md"
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(final_markdown)
+            
+        print(f"✅ Artigo derivado com sucesso e salvo em: {file_path}")
+        solicitar_indexacao_google(f"{CONFIG['COMPANY_WEBSITE']}blog/{slug}/")
+        return True
+
+    except Exception as erro_geral:
+        print(f"🚨 ERRO INTERNO DURANTE A EXECUÇÃO DO SCRIPT:")
+        traceback.print_exc()
+        return False
 
 if __name__ == '__main__':
     sucesso = executar_geracao_youtube()
     if not sucesso:
+        print("❌ Encerrando processo com erro (Código 1) para acionamento do fallback estático.")
         sys.exit(1)
