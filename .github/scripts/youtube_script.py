@@ -16,28 +16,14 @@ from google.auth.transport.requests import Request
 import subprocess
 import traceback
 
-# Força instalação e atualização limpa da biblioteca oficial no ambiente isolado do Runner
+# Força instalação e atualização limpa da biblioteca oficial
 try:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "youtube-transcript-api"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "youtube-transcript-api"], stdout=subprocess.DEVNULL)
 except Exception as e:
-    print(f"⚠️ Erro ao atualizar pip: {e}")
+    pass
 
-# Importação direta e segura
 import youtube_transcript_api
-
-# Limpa o cache do Python para evitar conflitos de caminhos locais no Runner
-if 'youtube_transcript_api' in sys.modules:
-    del sys.modules['youtube_transcript_api']
-
-try:
-    import youtube_transcript_api
-    from youtube_transcript_api import YouTubeTranscriptApi
-except (ImportError, AttributeError):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "youtube-transcript-api"])
-    if 'youtube_transcript_api' in sys.modules:
-        del sys.modules['youtube_transcript_api']
-    import youtube_transcript_api
-    from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api import YouTubeTranscriptApi
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
@@ -120,14 +106,11 @@ def extrair_video_id(url):
     return match.group(1) if match else None
 
 def video_ja_processado(video_id):
-    """Lógica de verificação estrita para evitar falsos positivos."""
     folder = Path(CONFIG['OUTPUT_FOLDER'])
     if not folder.exists():
         return False
-    
     if CONFIG_TESTES.get('FORCAR_GRAVACAO_TESTE', False):
         return False
-
     for post in folder.glob("*.md"):
         try:
             content = post.read_text(encoding='utf-8')
@@ -149,22 +132,10 @@ def obter_metadados_youtube(url):
     return None, None
 
 def obter_transcricao(video_id):
-    """
-    Abordagem multi-camadas para invocar a transcrição sem depender exclusivamente do mapeamento estático do objeto.
-    """
+    """Abordagem dinâmica para extrair a legenda oficial da biblioteca."""
     try:
-        # Camada 1: Tenta puxar diretamente pelo método do módulo principal
-        if hasattr(youtube_transcript_api, 'YouTubeTranscriptApi'):
-            classe_api = getattr(youtube_transcript_api, 'YouTubeTranscriptApi')
-            if hasattr(classe_api, 'get_transcript'):
-                lista = classe_api.get_transcript(video_id, languages=['pt', 'en'])
-                return " ".join([item['text'] for item in lista])
-        
-        # Camada 2: Fallback direto da API de Transcrição Oficial
-        from youtube_transcript_api import YouTubeTranscriptApi
         lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
         return " ".join([item['text'] for item in lista])
-        
     except Exception as e:
         print(f"❌ Falha crítica na API de Transcrição para o ID {video_id}: {e}")
         return None
@@ -184,7 +155,7 @@ TRANSCRIÇÃO DO VÍDEO PARA CONTEXTO:
 \"\"\"{transcricao}\"\"\"
 
 Escreva um artigo completo estruturado em Markdown, focado em {keyword}, contextualizando o mercado do Brasil.
-Use parágrafos curtos (2-3 linhas), subtítulos H2/H3 marcantes, inclua uma seção de resumo rápido, incorpore a imagem do meio usando a sintaxe de imagem do markdown, insira naturalmente os links internos reais: `{link_interno_1}` e `{link_interno_2}`. Termine com um FAQ e o Schema JSON-LD oculto em comentário HTML. Do não adicione delimitadores Front Matter no texto de resposta."""
+Use parágrafos curtos (2-3 linhas), subtítulos H2/H3 marcantes, inclua uma seção de resumo rápido, incorpore a imagem do meio usando a sintaxe de imagem do markdown, insira naturally os links internos reais: `{link_interno_1}` e `{link_interno_2}`. Termine com um FAQ e o Schema JSON-LD oculto em comentário HTML. Do não adicione delimitadores Front Matter no texto de resposta."""
 
 def slugify(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8').lower()
@@ -318,6 +289,5 @@ youtube_id: {video_id_escolhido}
 
 if __name__ == '__main__':
     sucesso = executar_geracao_youtube()
-    if not sucesso:
-        print("❌ Encerrando processo com erro (Código 1) para acionamento do fallback estático.")
+    if not_sucesso := (not sucesso):
         sys.exit(1)
