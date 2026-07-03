@@ -61,3 +61,4 @@ jobs:
           else
             echo "Nenhuma alteração para commitar."
           fi
+
