@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import os
 import sys
 import subprocess
@@ -59,30 +60,32 @@ def rodar_script(nome_script):
     return resultado.returncode == 0
 
 def main():
-    # Verifica modos de forçar execução via config
+    # 🔴 BLOQUEIO TOTAL DE CRÉDITOS: Se o modelo estático for forçado por engano, cancela.
     if CONFIG_TESTES.get('FORCAR_MODELO_ESTATICO', False):
-        print("🎛️ [Painel Ativo]: Forçando Modelo Estático (Pautas)...")
-        rodar_script("generate_article.py")
-        return
+        print("🛑 [Proteção de Créditos]: Geração estática cancelada por diretiva de segurança.")
+        sys.exit(0)
+
+    print("🎛️ [Orquestrador]: Modo Exclusivo YouTube Ativo.")
 
     if CONFIG_TESTES.get('FORCAR_MODELO_YOUTUBE', False):
         print("🎛️ [Painel Ativo]: Forçando Modelo YouTube (Vídeos)...")
         if not rodar_script("youtube_script.py"):
-            print("🚨 Falha no script do YouTube. Fallback para Modelo Estático...")
-            rodar_script("generate_article.py")
+            print("🛑 [Proteção de Créditos]: O script do YouTube falhou. Processo interrompido para salvar tokens.")
+            sys.exit(1)
         return
 
-    # Orquestração por dias pares/ímpares se nenhum botão estiver forçado
+    # Orquestração por dias se nenhum botão estiver forçado
     dia_do_ano = datetime.now().timetuple().tm_yday
     
     if dia_do_ano % 2 == 0:
         print(f"📅 [Dia {dia_do_ano} - Par]: Selecionando Modelo YouTube...")
         if not rodar_script("youtube_script.py"):
-            print("🚨 Falha no YouTube. Ativando Fallback para Modelo Estático...")
-            rodar_script("generate_article.py")
+            print("🛑 [Proteção de Créditos]: O script do YouTube falhou. Processo interrompido para salvar tokens.")
+            sys.exit(1)
     else:
-        print(f"📅 [Dia {dia_do_ano} - Ímpar]: Selecionando Modelo Estático...")
-        rodar_script("generate_article.py")
+        # Nos dias ímpares, em vez de gastar tokens gerando artigos genéricos, o script pula a execução com segurança.
+        print(f"📅 [Dia {dia_do_ano} - Ímpar]: Modelo Estático Ignorado para poupar saldo da API.")
+        sys.exit(0)
 
 if __name__ == '__main__':
     main()
