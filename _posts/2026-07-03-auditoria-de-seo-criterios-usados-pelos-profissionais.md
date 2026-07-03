@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 'Auditoria de SEO: Critérios usados pelos profissionais - Análise Especializada'
-date: 2026-07-03 00:01:00 -0300
+date: 2026-07-02 00:01:00 -0300
 categories: 'Análises'
 tags: [Auditoria SEO, SEO Técnico, Estratégia SEO]
 image: https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60
