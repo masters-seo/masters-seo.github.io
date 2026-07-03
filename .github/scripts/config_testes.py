@@ -14,3 +14,11 @@ CONFIG_TESTES = {
     # 🟡 BOTÃO 4: Desativar Indexação no Google Search Console
     'DESATIVAR_INDEXING_API': False,
 }
+
+def solicitar_indexacao_google(target_url):
+    """
+    TRAVA DE SEGURANÇA: Retorna False imediatamente para impedir envios ao Google Search Console
+    durante a fase de homologação e testes da esteira do YouTube.
+    """
+    print(f"🟡 Indexação pulada (Modo de Testes Ativo) para: {target_url}")
+    return False
