@@ -29,6 +29,7 @@ if not hasattr(YouTubeTranscriptApi, 'get_transcript'):
     print("O script importou um arquivo local com o nome 'youtube_transcript_api'.")
     print("Por favor, verifique se existe um arquivo com esse nome na mesma pasta e delete-o.")
     sys.exit(1)
+    
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
