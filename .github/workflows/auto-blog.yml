@@ -5,6 +5,7 @@ on:
     - cron: '0 9 * * *' # Roda todos os dias às 09:00 UTC
   workflow_dispatch: # Permite execução manual
 
+
 jobs:
   generate-article:
     runs-on: ubuntu-latest
