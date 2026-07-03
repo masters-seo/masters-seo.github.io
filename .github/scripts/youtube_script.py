@@ -16,7 +16,6 @@ from google.auth.transport.requests import Request
 from youtube_transcript_api import YouTubeTranscriptApi
 import youtube_transcript_api
 print(f"DEBUG: O módulo está sendo carregado de: {youtube_transcript_api.__file__}")
-
 # Isso vai listar o que existe dentro da classe para ver se 'get_transcript' realmente está lá
 print(f"DEBUG: Atributos encontrados: {dir(youtube_transcript_api)}")
 
