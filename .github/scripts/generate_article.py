@@ -5,6 +5,8 @@ import re
 import unicodedata
 import requests
 import json
+import smtplib
+from email.message import EmailMessage
 from datetime import datetime
 from pathlib import Path
 from google import genai
@@ -145,7 +147,7 @@ def gerar_imagem_com_texto(titulo, slug):
         palavras = titulo.split()
         linhas = []
         linha_atual = ""
-        for palavra in palavras:
+        for palabra in palavras:
             test_linha = f"{linha_atual} {palavra}".strip()
             if len(test_linha) * (faixa_altura * 0.18) < W - 60:
                 linha_atual = test_linha
@@ -210,18 +212,100 @@ def solicitar_indexacao_google(target_url):
         print(f"⚠️ Erro ao executar a Indexing API do Google: {e}")
         return False
 
+def enviar_email_alerta_topicos():
+    """Envia um e-mail avisando que a lista de tópicos padrão acabou e está usando tendências de busca."""
+    smtp_user = os.getenv('SMTP_USER')
+    smtp_pass = os.getenv('SMTP_PASSWORD')
+    
+    if not smtp_user or not smtp_pass:
+        print("⚠️ Envio de e-mail cancelado: SMTP_USER ou SMTP_PASSWORD não configurados nas variáveis de ambiente.")
+        return False
+        
+    try:
+        msg = EmailMessage()
+        msg.set_content(
+            "Alerta de Automação:\n\n"
+            "A lista estática de tópicos ('TOPICS') configurada no script chegou ao fim.\n"
+            "O gerador mudou automaticamente para o modo de fallback e está criando artigos baseados "
+            "em tópicos em alta extraídos em tempo real da pesquisa do Google através da inteligência artificial.\n\n"
+            "Por favor, revise o arquivo do script e forneça novos tópicos estáticos se desejar retomar a sequência controlada."
+        )
+        msg['Subject'] = "⚠️ Alerta: Lista de Tópicos Esgotada - Masters SEO"
+        msg['From'] = smtp_user
+        msg['To'] = smtp_user  # Envia o alerta para o seu próprio e-mail configurado
+
+        # Utiliza conexão segura com o servidor SMTP do Gmail
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+        print("📧 E-mail de notificação enviado com sucesso para o administrador.")
+        return True
+    except Exception as e:
+        print(f"⚠️ Falha ao tentar enviar e-mail de alerta: {e}")
+        return False
+
+def buscar_topicos_tendencia_google(client):
+    """Gera novos temas dinâmicos simulando tendências de busca em alta no Google usando a inteligência artificial."""
+    try:
+        print("🔍 Pesquisando tendências e tópicos em alta no ecossistema do Google...")
+        prompt_fallback = (
+            "Identifique temas e dúvidas que estão em alta na pesquisa do Google no Brasil atualmente sobre "
+            "Marketing Digital, SEO técnico, Inteligência Artificial e tráfego orgânico. Forneça uma lista com "
+            "exatamente 5 tópicos de títulos de artigos chamativos e altamente clicáveis. "
+            "Devolva APENAS as frases dos tópicos em linhas separadas, sem números, sem marcadores e sem aspas."
+        )
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt_fallback,
+        )
+        linhas = response.text.strip().split('\n')
+        temas_limpos = [linha.strip() for linha in linhas if len(linha.strip()) > 10]
+        if temas_limpos:
+            return temas_limpos
+    except Exception as e:
+        print(f"⚠️ Erro ao buscar tendências via IA: {e}")
+    
+    # Fallback extremo caso falhe a geração dinâmica
+    return ["Tendências de SEO Semântico para o Próximo Ano"]
+
 def main():
     if not CONFIG['GEMINI_API_KEY']:
         print("❌ GEMINI_API_KEY ausente.")
         return False
 
-    topic = random.choice(CONFIG['TOPICS'])
+    client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
+    
+    # Controle sequencial de tópicos usando um arquivo local de índice
+    file_index_path = Path("indice.txt")
+    if file_index_path.exists():
+        try:
+            current_index = int(file_index_path.read_text(encoding='utf-8').strip())
+        except ValueError:
+            current_index = 0
+    else:
+        current_index = 0
+
+    lista_topicos_padrao = CONFIG['TOPICS']
+
+    # Verifica se a lista padrão chegou ao fim
+    if current_index >= len(lista_topicos_padrao):
+        print("⚠️ Todos os tópicos da lista padrão já foram produzidos.")
+        # Aciona a função de busca dinâmica das tendências do Google
+        topicos_dinamicos = buscar_topicos_tendencia_google(client)
+        topic = random.choice(topicos_dinamicos)
+        
+        # Aciona a função para enviar a notificação por e-mail apenas na primeira execução pós-esgotamento
+        if current_index == len(lista_topicos_padrao):
+            enviar_email_alerta_topicos()
+    else:
+        # Pega exatamente o próximo tópico da sequência configurada
+        topic = lista_topicos_padrao[current_index]
+        print(f"📋 Fila Sequencial: Processando tópico {current_index + 1} de {len(lista_topicos_padrao)}")
+
     keyword = random.choice(CONFIG['KEYWORDS'])
     contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
-
     secondary_img_url = random.choice(CONFIG['UNSPLASH_POOL'])
 
-    client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
     print(f"Gerando artigo otimizado sobre: {topic}")
 
     title_clean = f"{topic} - Análise Especializada"
@@ -291,6 +375,9 @@ tags: [{selected_tags}]{image_meta}
 
     public_post_url = f"{CONFIG['COMPANY_WEBSITE']}blog/{slug}/"
     solicitar_indexacao_google(public_post_url)
+
+    # Incrementa e atualiza de forma permanente o controle de posição da fila
+    file_index_path.write_text(str(current_index + 1), encoding='utf-8')
 
     return True
 
