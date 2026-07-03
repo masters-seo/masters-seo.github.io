@@ -1,35 +1,33 @@
-
 #!/usr/bin/env python3
-import sys
-# Remove o diretório local do topo da fila de busca do Python
-if "" in sys.path: sys.path.remove("")
-if "." in sys.path: sys.path.remove(".")
-# Remove o diretório do próprio script da fila para não importar arquivos fantasmas vizinhos
 import os
-script_dir = os.path.dirname(os.path.abspath(__file__))
-if script_dir in sys.path: sys.path.remove(script_dir)
+import sys
+import requests
+from google import genai
 
-# AGORA SIM OS IMPORTS OFICIAIS:
-import requests
-from google import genai
-from youtube_transcript_api import YouTubeTranscriptApi
-# ... resto do código igual ...
-import os
-import sys
-import requests
-from google import genai
-from youtube_transcript_api import YouTubeTranscriptApi
+# Força a busca direta dentro do pacote correto
+import youtube_transcript_api
 
 def obter_legenda(video_id):
     print(f"🔤 Buscando transcrição para o ID: {video_id}...")
     try:
-        # Método direto e oficial documentado na biblioteca
-        lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
+        # Investigando dinamicamente onde a classe real está
+        if hasattr(youtube_transcript_api, 'YouTubeTranscriptApi'):
+            # Se a classe estiver exposta diretamente no módulo (padrão)
+            classe_api = getattr(youtube_transcript_api, 'YouTubeTranscriptApi')
+        else:
+            # Se o Python importou o arquivo/módulo de forma literal
+            classe_api = youtube_transcript_api
+
+        # Executa a chamada do método estático diretamente na classe identificada
+        lista = classe_api.get_transcript(video_id, languages=['pt', 'en'])
         texto_completo = " ".join([item['text'] for item in lista])
         print(f"✅ Transcrição obtida com sucesso ({len(texto_completo)} caracteres).")
         return texto_completo
+        
     except Exception as e:
         print(f"❌ Erro ao coletar transcrição: {e}")
+        # Exibe as propriedades internas do que foi importado para diagnosticar no log
+        print(f"🔍 Atributos disponíveis no módulo importado: {dir(youtube_transcript_api)}")
         return None
 
 def gerar_artigo(transcricao, video_id):
@@ -54,7 +52,6 @@ Transcrição:
         
         conteúdo = response.text.strip()
         
-        # Estrutura o Markdown com Front Matter básico para o Jekyll
         front_matter = f"""---
 layout: post
 title: 'Análise de SEO Avançada - Vídeo {video_id}'
@@ -71,21 +68,19 @@ youtube_id: {video_id}
 """
         markdown_final = front_matter + conteúdo
         
-        # Garante a existência da pasta e salva
         os.makedirs('_posts', exist_ok=True)
         caminho_arquivo = f"_posts/2026-07-03-analise-seo-{video_id}.md"
         
         with open(caminho_arquivo, 'w', encoding='utf-8') as f:
             f.write(markdown_final)
             
-        print(f"🎉 Artigo gerado com sucesso e salvo em: {caminho_arquivo}")
+        print(f"🎉 Artigo gerado com sucesso e saved em: {caminho_arquivo}")
         return True
     except Exception as e:
         print(f"❌ Erro na geração do Gemini: {e}")
         return False
 
 if __name__ == '__main__':
-    # ID do vídeo do RankMath que você está tentando processar
     ID_DO_VIDEO = "VBRgIcXIxB0" 
     
     texto_legenda = obter_legenda(ID_DO_VIDEO)
