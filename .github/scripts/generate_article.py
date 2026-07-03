@@ -78,15 +78,24 @@ CONFIG = {
 }
 
 def raspar_links_da_home():
-    """Acessa a home ativa e extrai links internos reais dinamicamente"""
+    """Melhoria na raspagem: captura links relativos ou completos de posts reais na home"""
     links_fallback = ["/blog/como-melhorar-nota-pagespeed/", "/blog/advocacia/como-captar-clientes-na-advocacia/"]
     try:
         print(f"🌐 [Script Estático] Raspando links reais da Home: {CONFIG['COMPANY_WEBSITE']}")
         resposta = requests.get(CONFIG['COMPANY_WEBSITE'], timeout=15)
         if resposta.status_code != 200:
             return links_fallback
-        links_encontrados = re.findall(r'href=["\'](/blog/[a-zA-Z0-9\-_]+/?)["\']', resposta.text)
-        links_limpos = list(set(links_encontrados))
+        
+        # Expressão regular mais abrangente para capturar links com ou sem o domínio inclusos
+        links_encontrados = re.findall(r'href=["\']((?:https://masters-seo\.github\.io)?/blog/[a-zA-Z0-9\-_]+/?)["\']', resposta.text)
+        
+        # Padroniza tudo para caminhos relativos limpos
+        links_limpos = []
+        for l in links_encontrados:
+            caminho_relativo = l.replace("https://masters-seo.github.io", "")
+            if caminho_relativo not in links_limpos:
+                links_limpos.append(caminho_relativo)
+                
         return links_limpos if links_limpos else links_fallback
     except Exception as e:
         print(f"⚠️ Erro ao raspar home ({e}). Usando fallbacks configurados.")
@@ -116,14 +125,16 @@ DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT (Framework Copywriting Avançado):
      * Todos os links gerados devem ser links reais e clicáveis usando a sintaxe Markdown [Texto Ancora Contextual](URL) ou HTML. É terminantemente proibido deixar o link em formato de texto cru.
      * Nenhum link pode conter "nofollow". Todos devem ser links padrão (DoFollow) para passar autoridade.
      * Insira de forma fluida no texto 1 ÚNICO link para o site do especialista Maycon Matos usando o endereço exato fornecido: {contextual_link}
-     * Insira obrigatoriamente estes 2 links internos reais capturados do nosso portal (NÃO invente nenhuma outra estrutura de URL interna além destas): [{link_interno_1}]({link_interno_1}) e [{link_interno_2}]({link_interno_2})
+     * REGRA DE LINKS INTERNOS CRUCIAL: Você deve usar OBRIGATORIAMENTE os dois caminhos de texto exatos fornecidos abaixo. Não altere uma única letra nem invente slugs novos. Insira-os de forma natural usando a sintaxe Markdown exata:
+       Link Interno Real 1: Use o link `{link_interno_1}` aplicando a sintaxe `[Texto âncora contextual aqui]({link_interno_1})`
+       Link Interno Real 2: Use o link `{link_interno_2}` aplicando a sintaxe `[Texto âncora contextual aqui]({link_interno_2})`
      * Insira 2 links externos para portais de altíssima autoridade global em SEO (ex: Search Engine Land, Search Engine Journal, Backlinko, Neil Patel ou Google Search Central).
    - CONCLUSÃO E CTA: Conclusão amarrada seguidos de uma chamada para ação sutil direcionando o leitor a explorar as análises no portal {CONFIG['COMPANY_WEBSITE']}.
    - FAQ: Seção robusta contendo entre 5 e 7 dúvidas frequentes, com respostas diretas e curtas.
-   - SCHEMA JSON-LD OCULTO: Ao final completo do arquivo, gere o código estruturado Schema JSON-LD (do tipo Article) inteiramente embutido dentro de um comentário HTML padrão para que ele fique invisível na tela para o usuário, mas acessível ao robô do Google.
+   - SCHEMA JSON-LD OCULTO: Ao final completo do arquivo, gere o código estruturado Schema JSON-LD (do tipo Article) inteiramente embutido dentro de um comentário HTML padrão.
 
 IMPORTANTE SOBRE METADADOS DE SEO DO ARTIGO:
-Você deve OBRIGATORIAMENTE analisar o Tópico e o Conteúdo gerado para definir inteligentemente duas propriedades cruciais no início do texto (escreva as duas linhas de forma normal no topo da sua resposta para que o script capture):
+Você deve OBRIGATORIAMENTE analisar o Tópico e o Conteúdo gerado para definir duas propriedades cruciais no início do texto (escreva as duas linhas de forma normal no topo da sua resposta para que o script capture):
 1. CATEGORIA: Escolha estritamente APENAS UMA entre estas 6 opções que melhor se adapta contextualmente ao assunto: Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA. Escreva exatamente no formato: 'CATEGORIA_SELECIONADA: Sua Categoria Aqui'.
 2. TAGS: Defina exatamente 3 tags curtas e estratégicas em minúsculas que complementem e façam sentido direto para o artigo. Escreva no formato: 'TAGS_SELECIONADAS: tag1, tag2, tag3'.
 
@@ -166,7 +177,7 @@ def gerar_imagem_com_texto(titulo, slug):
         palavras = titulo.split()
         linhas = []
         linha_atual = ""
-        for palavra in palavras:
+        for palabra in palavras:
             test_linha = f"{linha_atual} {palavra}".strip()
             if len(test_linha) * (faixa_altura * 0.18) < W - 60:
                 linha_atual = test_linha
@@ -234,6 +245,11 @@ def solicitar_indexacao_google(target_url):
         return False
 
 def main():
+    # Se o painel mandar explicitamente forçar o YouTube, encerra o modelo estático com bypass
+    if CONFIG_TESTES.get('FORCOR_MODELO_YOUTUBE', False) or CONFIG_TESTES.get('FORCAR_MODELO_YOUTUBE', False):
+        print("⏭️ Ignorando Modelo Estático: Painel de Controle configurado para focar no Módulo do YouTube.")
+        return True
+
     if not CONFIG['GEMINI_API_KEY']:
         print("❌ GEMINI_API_KEY ausente.")
         return False
@@ -243,7 +259,6 @@ def main():
     contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
     secondary_img_url = random.choice(CONFIG['UNSPLASH_POOL'])
     
-    # 🌟 Captura dinâmica dos links reais da Home antes da geração do prompt
     links_reais = raspar_links_da_home()
     link_int1 = random.choice(links_reais)
     link_int2 = random.choice([l for l in links_reais if l != link_int1] or links_reais)
