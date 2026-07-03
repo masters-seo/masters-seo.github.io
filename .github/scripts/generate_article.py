@@ -10,11 +10,9 @@ from email.message import EmailMessage
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from google import genai
-# Nova biblioteca para autenticação automática com a API do Google
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 
-# Tenta ler o painel de testes se ele existir na pasta
 try:
     from config_testes import CONFIG_TESTES
 except ImportError:
@@ -22,7 +20,6 @@ except ImportError:
 
 CONFIG = {
     'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY', ''),
-    # Guarde o conteúdo do JSON da sua Conta de Serviço do Google Cloud nesta variável de ambiente
     'GOOGLE_SERVICE_ACCOUNT_JSON': os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON', ''),
     'COMPANY_NAME': os.getenv('COMPANY_NAME', 'Masters SEO'),
     'COMPANY_WEBSITE': os.getenv('COMPANY_WEBSITE', 'https://masters-seo.github.io/'),
@@ -74,42 +71,31 @@ CONFIG = {
 }
 
 def build_prompt(topic, keyword, contextual_link, secondary_img_url, alt_text_secondary):
-    return f"""Você é um Copywriter Sênior de Resposta Direta e Analista Principal do {CONFIG['COMPANY_NAME']}.
-Crie um artigo de autoridade profunda, altamente persuasivo, analítico e totalmente otimizado para SEO semântico.
+    return f"""Você é um Copywriter Sênior de Resposta Direta do portal {CONFIG['COMPANY_NAME']}.
+Escreva um artigo dinâmico, direto ao ponto e focado na conversão sobre: {topic}.
 
-TÓPICO: {topic}
 PALAVRA-CHAVE PRINCIPAL: {keyword}
-LINK CONTEXTUAL DO MAYCON MATOS: {contextual_link}
-URL DA IMAGEM DO MEIO DO ARTIGO: {secondary_img_url}
-ALT TEXT DA IMAGEM DO MEIO: {alt_text_secondary}
+LINK OBRIGATÓRIO (Maycon Matos): [{keyword}]({contextual_link})
+IMAGEM DO MEIO DO ARTIGO: ![{alt_text_secondary}]({secondary_img_url})
 
-DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT:
-1. ESCANEABILIDADE EXTREMA: Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente para gerar leitura dinâmica e fluida. Nunca agrupe blocos densos de texto de forma alguma.
-2. TOM EDITORIAL: Premium, analítico, independente e totalmente focado no mercado corporativo real de SEO.
+DIRETRIZES DE FORMATAÇÃO RIGOROSAS (NÃO ABRA MÃO DE NENHUM DESSES ELEMENTOS):
+1. ESCANEABILIDADE: Parágrafos curtos com no MÁXIMO 2 ou 3 linhas. Quebre o texto frequentemente.
+2. CITAÇÃO GIGANTE: Na introdução, insira EXATAMENTE esta tag HTML modificando o texto interno:
+<blockquote style="font-size: 2.2rem; line-height: 1.2; color: #111; font-weight: 800; border-left: 6px solid #000; padding-left: 15px; margin: 30px 0;">"Frase impactante sobre {keyword}"</blockquote>
 
-ESTRUTURA CRUCIAL REQUERIDA (Siga estritamente esta ordem de blocos em sua resposta):
-- TÍTULO PRINCIPAL (H1): Crie um título forte baseado no Tópico.
-- INTRODUÇÃO DIRETA: Aborde o cenário de forma impactante em parágrafos curtos de até 3 linhas.
-- FRASE DE CITAÇÃO EXTRA-GIGANTE: Logo após os parágrafos introdutórios, adicione uma frase curta de extremo impacto envolvida exatamente nesta tag HTML:
-  <blockquote style="font-size: 2.2rem; line-height: 1.2; color: #111; font-weight: 800; border-left: 6px solid #000; padding-left: 15px; margin: 30px 0;">"Sua frase de forte impacto aqui sobre o tema"</blockquote>
+3. RESUMO RÁPIDO: Logo após a citação, adicione o intertítulo "## ⚡ Resumo Rápido: Insights dos Experts" seguido de 3 a 5 tópicos em marcadores de asterisco (*).
+4. IMAGEM DO MEIO: Insira a sintaxe da imagem fornecida exatamente na metade do artigo.
+5. TABELA COMPARATIVA: Monte uma tabela comparativa prática em Markdown relevante para o tema.
+6. LINKAGEM: 
+   - Use o link obrigatório do Maycon Matos uma vez.
+   - Insira 2 links internos relativos como: [/blog/seo-tecnico/](/blog/seo-tecnico/).
+   - Insira 2 links externos para sites globais (ex: [Search Engine Land](https://searchengineland.com)).
+7. FAQ COMPLETO: Crie a seção "## FAQ: Perguntas Frequentes" usando H3 para 4 a 5 perguntas seguidas de respostas curtas.
+8. METADADOS OBRIGATÓRIOS (Insira no início absoluto da resposta para o script ler):
+CATEGORIA_SELECIONADA: [Insira uma: Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA]
+TAGS_SELECIONADAS: tag1, tag2, tag3
 
-- RESUMO RÁPIDO PARA IA: Adicione o intertítulo "## ⚡ Resumo Rápido: Insights dos Experts". Logo abaixo, inclua obrigatoriamente de 3 a 5 linhas soltas usando marcadores de bullet points (*), trazendo insights ultra-impactantes que resumam a resposta principal.
-- DESENVOLVIMENTO COM INTERTÍTULOS (H2 e H3): Divida em seções estratégicas explorando conceitos como intenção de busca, E-E-A-T e dados estruturados de forma profunda.
-- IMAGEM INTERMEÁRIA DINÂMICA: Exatamente no meio do desenvolvimento do artigo, insira a imagem secundária fornecida usando a sintaxe clássica Markdown: ![{alt_text_secondary}]({secondary_img_url})
-- TABELA COMPARATIVA: Adicione uma tabela comparativa detalhada e responsiva em Markdown contextualizada com o tema (ex: abordando Tradicional vs Nova Era).
-- LINKAGEM OBRIGATÓRIA DO-FOLLOW: 
-  * Insira de forma fluida no texto 1 ÚNICO link do especialista Maycon Matos usando o endereço exato fornecido: [{keyword}]({contextual_link})
-  * Insira 2 links internos apontando de forma fictícia para outros artigos do portal usando caminhos relativos como "/blog/nome-do-post/".
-  * Insira 2 links externos para portais de altíssima autoridade global em SEO (ex: Search Engine Land, Search Engine Journal, Backlinko, Neil Patel ou Google Search Central). Use o formato padrão do markdown [Nome da Fonte](URL).
-- CONCLUSÃO E CTA: Conclusão amarrada direcionando o leitor a explorar as análises no portal {CONFIG['COMPANY_WEBSITE']}.
-- FAQ COMPLETO: Seção "## FAQ: Perguntas Frequentes" contendo entre 5 e 7 dúvidas frequentes organizadas com H3 para as perguntas e respostas diretas e curtas de 2 a 3 linhas logo abaixo.
-- SCHEMA JSON-LD OCULTO: Ao final completo do arquivo, gere o código estruturado Schema JSON-LD (do tipo BlogPosting ou Article) em formato estruturado limpo embutido dentro de um comentário HTML padrão:
-  METADADOS OBRIGATÓRIOS PARA O TOP DO ARQUIVO:
-Analise o assunto e gere no início absoluto da sua resposta estas duas linhas textuais para que o script capture:
-CATEGORIA_SELECIONADA: [Sua Categoria Aqui] (Escolha uma entre: Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA).
-TAGS_SELECIONADAS: [tag1, tag2, tag3] (Três tags estratégicas em minúsculas).
-
-IMPORTANTE: Devolva exclusivamente o código estruturado em Markdown com os elementos visuais acima solicitados. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta, pois o script Python irá gerá-los."""
+Não envie blocos delimitadores de código (como ```markdown). Comece direto nos metadados."""
 
 def slugify(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8').lower()
@@ -148,7 +134,7 @@ def gerar_imagem_com_texto(titulo, slug):
         palavras = titulo.split()
         linhas = []
         linha_atual = ""
-        for palabra in palavras:
+        for palavra in palavras:
             test_linha = f"{linha_atual} {palavra}".strip()
             if len(test_linha) * (faixa_altura * 0.18) < W - 60:
                 linha_atual = test_linha
@@ -157,12 +143,11 @@ def gerar_imagem_com_texto(titulo, slug):
                 linha_atual = palavra
         linhas.append(linha_atual)
 
-        draw_txt = ImageDraw.Draw(overlay)
         total_texto_h = len(linhas) * int(faixa_altura * 0.35)
         current_y = y0 + (faixa_altura - total_texto_h) // 2
 
         for linha in linhas:
-            draw_txt.text((W // 2, current_y), linha, fill=(255, 255, 255, 255), font=font, anchor="mm")
+            draw.text((W // 2, current_y), linha, fill=(255, 255, 255, 255), font=font, anchor="mm")
             current_y += int(faixa_altura * 0.35)
 
         img_final = Image.alpha_composite(img, overlay).convert("RGB")
@@ -190,86 +175,58 @@ def solicitar_indexacao_google(target_url):
         return False
     try:
         info = json.loads(CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON'])
-        scopes = ['https://www.googleapis.com/auth/indexing']
+        scopes = ['[https://www.googleapis.com/auth/indexing](https://www.googleapis.com/auth/indexing)']
         credentials = service_account.Credentials.from_service_account_info(info, scopes=scopes)
-
         credentials.refresh(Request())
         token = credentials.token
 
-        endpoint = "https://indexing.googleapis.com/v3/urlNotifications:publish"
+        endpoint = "[https://indexing.googleapis.com/v3/urlNotifications:publish](https://indexing.googleapis.com/v3/urlNotifications:publish)"
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {token}"
         }
-        body = {
-            "url": target_url,
-            "type": "URL_UPDATED"
-        }
+        body = {"url": target_url, "type": "URL_UPDATED"}
 
         response = requests.post(endpoint, json=body, headers=headers)
         if response.status_code == 200:
-            print(f"🚀 Sucesso! Google Search notificado instantaneamente para indexar: {target_url}")
+            print(f"🚀 Sucesso! Google Search notificado instantaneamente: {target_url}")
             return True
         else:
-            print(f"❌ Falha ao notificar o Google. Status: {response.status_code} - {response.text}")
+            print(f"❌ Falha ao notificar o Google: {response.status_code}")
             return False
     except Exception as e:
-        print(f"⚠️ Erro ao executar a Indexing API do Google: {e}")
+        print(f"⚠️ Erro ao executar a Indexing API: {e}")
         return False
 
 def enviar_email_alerta_topicos():
-    """Envia um e-mail avisando que a lista de tópicos padrão acabou."""
     smtp_user = os.getenv('SMTP_USER')
     smtp_pass = os.getenv('SMTP_PASSWORD')
-    
     if not smtp_user or not smtp_pass:
-        print("⚠️ Envio de e-mail cancelado: SMTP_USER ou SMTP_PASSWORD não configurados.")
         return False
-        
     try:
         msg = EmailMessage()
-        msg.set_content(
-            "Alerta de Automação:\n\n"
-            "A lista estática de tópicos ('TOPICS') configurada no script chegou ao fim.\n"
-            "O gerador mudou automaticamente para o modo de fallback e está criando artigos baseados "
-            "em tópicos em alta extraídos em tempo real da pesquisa do Google através da inteligência artificial.\n\n"
-            "Por favor, revise o arquivo do script e forneça novos tópicos estáticos se desejar retomar a sequência controlada."
-        )
+        msg.set_content("A lista estática de tópicos esgotou. O script mudou para o modo dinâmico.")
         msg['Subject'] = "⚠️ Alerta: Lista de Tópicos Esgotada - Masters SEO"
         msg['From'] = smtp_user
         msg['To'] = smtp_user
-
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             server.login(smtp_user, smtp_pass)
             server.send_message(msg)
-        print("📧 E-mail de notificação enviado com sucesso para o administrador.")
         return True
     except Exception as e:
-        print(f"⚠️ Falha ao tentar enviar e-mail de alerta: {e}")
+        print(f"⚠️ Falha ao enviar e-mail: {e}")
         return False
 
 def buscar_topicos_tendencia_google(client):
-    """Gera novos temas dinâmicos baseados nas tendências em alta do ecossistema de busca do Google."""
     try:
-        print("🔍 Pesquisando tendências e tópicos em alta no ecossistema do Google...")
         prompt_fallback = (
-            "Identifique temas e dúvidas que estão em alta na pesquisa do Google no Brasil atualmente sobre "
-            "Marketing Digital, SEO técnico, Inteligência Artificial e tráfego orgânico. Forneça uma lista com "
-            "exatamente 5 tópicos de títulos de artigos chamativos e altamente clicáveis. "
-            "Devolva APENAS as frases dos tópicos em linhas separadas, sem números, sem marcadores e sem aspas."
+            "Forneça uma lista com exatamente 5 tópicos em alta sobre SEO e IA no Brasil. "
+            "Devolva APENAS os tópicos em linhas separadas."
         )
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt_fallback,
-        )
-        linhas = response.text.strip().split('\n')
-        temas_limpos = [linha.strip() for linha in linhas if len(linha.strip()) > 10]
-        if temas_limpos:
-            return temas_limpos
-    except Exception as e:
-        print(f"⚠️ Erro ao buscar tendências via IA: {e}")
-    
-    return ["Tendências de SEO Semântico para o Próximo Ano"]
+        response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt_fallback)
+        return [linha.strip() for linha in response.text.strip().split('\n') if len(linha.strip()) > 10]
+    except Exception:
+        return ["Tendências de SEO Semântico para o Próximo Ano"]
 
 def main():
     if not CONFIG['GEMINI_API_KEY']:
@@ -278,7 +235,6 @@ def main():
 
     client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
     
-    # Controle de Fila usando arquivo de estado indice.txt
     file_index_path = Path("indice.txt")
     if file_index_path.exists():
         try:
@@ -290,56 +246,53 @@ def main():
 
     lista_topicos_padrao = CONFIG['TOPICS']
 
-    # Se o índice passou da lista fixa, entra no Fallback de Pesquisa de Tendências
     if current_index >= len(lista_topicos_padrao):
-        print("⚠️ Todos os tópicos da lista padrão já foram produzidos. Ativando pesquisa automática...")
         topicos_dinamicos = buscar_topicos_tendencia_google(client)
         topic = random.choice(topicos_dinamicos)
-        
-        # Envia e-mail de aviso exatamente na primeira execução do esgotamento
         if current_index == len(lista_topicos_padrao):
             enviar_email_alerta_topicos()
     else:
-        # Segue estritamente a sequência correta da lista: o primeiro da lista é o primeiro feito
         topic = lista_topicos_padrao[current_index]
-        print(f"📋 Fila Sequencial: Processando tópico {current_index + 1} de {len(lista_topicos_padrao)}")
 
     keyword = random.choice(CONFIG['KEYWORDS'])
     contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
     secondary_img_url = random.choice(CONFIG['UNSPLASH_POOL'])
 
-    print(f"Gerando artigo otimizado sobre: {topic}")
-
-    title_clean = f"{topic} - Análise Especializada"
+    title_clean = f"{topic}"
     slug = slugify(topic)
 
-    # CORREÇÃO DA INDENTAÇÃO E INCLUSÃO DO FUSO HORÁRIO BRASIL (UTC-3)
+    # AJUSTE DE DATA - Remove o atraso de fuso horário para forçar aparição na Home
     fuso_brasil = timezone(timedelta(hours=-3))
-    today_str = datetime.now(fuso_brasil).strftime('%Y-%m-%d')
+    # Subtraímos 1 hora por segurança matemática para garantir que o post nunca entre como agendado/futuro no Jekyll
+    data_ajustada = datetime.now(fuso_brasil) - timedelta(hours=1)
+    today_str = data_ajustada.strftime('%Y-%m-%d')
 
-    alt_text_clean = f"Análise editorial focada em {keyword} abordando {topic} - Portal {CONFIG['COMPANY_NAME']}"
-    alt_text_secondary = f"Gráfico informativo sobre estratégias de {keyword} e otimização semântica."
+    alt_text_clean = f"Análise sobre {keyword} - {CONFIG['COMPANY_NAME']}"
+    alt_text_secondary = f"Gráfico informativo sobre {keyword}."
 
     prompt_final = build_prompt(topic, keyword, contextual_link, secondary_img_url, alt_text_secondary)
 
+    # AJUSTE DE PARÂMETROS DA API - Define configurações rígidas para evitar estouro de tokens
     response = client.models.generate_content(
         model='gemini-2.5-flash',
         contents=prompt_final,
+        config={
+            "max_output_tokens": 2500,
+            "temperature": 0.3
+        }
     )
 
     content = response.text.strip()
     if not content or len(content) < 300:
-        print("❌ Conteúdo gerado é inválido ou curto demais.")
+        print("❌ Conteúdo inválido ou curto demais.")
         return False
 
-    # Extrai categoria e tags geradas pela inteligência artificial
     category_match = re.search(r"CATEGORIA_SELECIONADA:\s*(.+)", content)
     tags_match = re.search(r"TAGS_SELECIONADAS:\s*(.+)", content)
 
-    selected_category = category_match.group(1).strip() if category_match else "Análises"
-    selected_tags = tags_match.group(1).strip() if tags_match else "seo, marketing-digital, otimizacao"
+    selected_category = category_match.group(1).replace('[', '').replace(']', '').strip() if category_match else "Estratégia"
+    selected_tags = tags_match.group(1).replace('[', '').replace(']', '').strip() if tags_match else "seo, ia"
 
-    # Limpa as linhas técnicas do início da resposta para não poluir o artigo
     content = re.sub(r"CATEGORIA_SELECIONADA:.*\n?", "", content)
     content = re.sub(r"TAGS_SELECIONADAS:.*\n?", "", content)
     content = content.strip()
@@ -354,13 +307,11 @@ def main():
         img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
         image_meta = f"\nimage: {img_url}\nimg_alt: '{alt_text_clean}'"
 
-    # Aplicação exata da flag de publicação imediata trazida do config_testes
     if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False):
         horario_post = "00:01:00"
     else:
-        horario_post = "12:00:00"
+        horario_post = "00:05:00"
 
-    # Montagem do Front Matter do Jekyll
     jekyll_front_matter = f"""---
 layout: post
 title: '{title_clean}'
@@ -380,14 +331,12 @@ tags: [{selected_tags}]{image_meta}
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(final_markdown)
 
-    print(f"✅ Artigo Jekyll de Alta Performance salvo com sucesso em: {file_path}")
+    print(f"✅ Artigo Jekyll salvo em: {file_path}")
 
     public_post_url = f"{CONFIG['COMPANY_WEBSITE']}blog/{slug}/"
     solicitar_indexacao_google(public_post_url)
 
-    # Avança a fila gravando o próximo índice permanentemente
     file_index_path.write_text(str(current_index + 1), encoding='utf-8')
-
     return True
 
 if __name__ == '__main__':
