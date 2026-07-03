@@ -177,7 +177,6 @@ def gerar_imagem_com_texto(titulo, slug):
         print(f"⚠️ Erro ao gerar imagem customizada: {e}")
         return CONFIG['URL_IMAGEM_PADRAO']
 
-# Nova função injetada para automatizar o pedido de rastreio no Google Search
 def solicitar_indexacao_google(target_url):
     if not CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON']:
         print("⚠️ Notificação de indexação ignorada: GOOGLE_SERVICE_ACCOUNT_JSON não configurada.")
@@ -187,7 +186,6 @@ def solicitar_indexacao_google(target_url):
         scopes = ['https://www.googleapis.com/auth/indexing']
         credentials = service_account.Credentials.from_service_account_info(info, scopes=scopes)
 
-        # Autentica e gera o Token de Acesso temporário
         credentials.refresh(Request())
         token = credentials.token
 
@@ -265,7 +263,6 @@ def main():
         img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
         image_meta = f"\nimage: {img_url}\nimg_alt: '{alt_text_clean}'"
 
-# Verificação dinâmica do horário com base no painel de controle
     if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False):
         horario_post = "00:01:00"
     else:
@@ -274,7 +271,6 @@ def main():
     jekyll_front_matter = f"""---
 layout: post
 title: '{title_clean}'
-date: {today_str} 12:00:00 -0300
 date: {today_str} {horario_post} -0300
 categories: '{selected_category}'
 tags: [{selected_tags}]{image_meta}
@@ -282,7 +278,6 @@ tags: [{selected_tags}]{image_meta}
 
 """
 
-"""
     final_markdown = jekyll_front_matter + content
 
     output_folder = Path(CONFIG['OUTPUT_FOLDER'])
@@ -294,9 +289,6 @@ tags: [{selected_tags}]{image_meta}
 
     print(f"✅ Artigo Jekyll de Alta Performance salvo com sucesso em: {file_path}")
 
-    # Executa a Indexação Automática enviando a URL pública gerada para o Google
-    # Nota: A rota padrão estruturada pelo Jekyll costuma ser o domínio + /categoria/ano/mes/dia/slug.html ou /ano/mes/dia/slug/
-    # Ajuste a montagem abaixo se a estrutura de permalinks do seu site for diferente
     public_post_url = f"{CONFIG['COMPANY_WEBSITE']}blog/{slug}/"
     solicitar_indexacao_google(public_post_url)
 
@@ -304,5 +296,3 @@ tags: [{selected_tags}]{image_meta}
 
 if __name__ == '__main__':
     main()
-    
-    
