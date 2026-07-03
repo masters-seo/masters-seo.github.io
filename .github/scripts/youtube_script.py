@@ -13,16 +13,14 @@ from pathlib import Path
 from google import genai
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
+
+# IMPORTAÇÃO CORRIGIDA: Importa apenas a classe necessária e remove a duplicidade
 from youtube_transcript_api import YouTubeTranscriptApi
-import youtube_transcript_api
-print(f"DEBUG: O módulo está sendo carregado de: {youtube_transcript_api.__file__}")
-# Isso vai listar o que existe dentro da classe para ver se 'get_transcript' realmente está lá
-print(f"DEBUG: Atributos encontrados: {dir(youtube_transcript_api)}")
 
 # Garante a importação correta do config_testes indepedente de onde o script foi chamado
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
-    sys.path.append(script_dir) # <--- O 'append' coloca no final, resolvendo o conflito
+    sys.path.append(script_dir) 
 
 try:
     from config_testes import CONFIG_TESTES
@@ -180,8 +178,8 @@ def obter_metadados_youtube(url):
 
 def obter_transcricao(video_id):
     try:
-        # Correção aplicada: acessando get_transcript como um método estático da classe
-        lista = youtube_transcript_api.YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
+        # CHAMADA CORRIGIDA: Usa diretamente a classe importada no topo do arquivo
+        lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
         return " ".join([item['text'] for item in lista])
     except Exception as e:
         print(f"❌ Não foi possível carregar a transcrição do vídeo {video_id}: {e}")
@@ -224,7 +222,7 @@ DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT (Framework Copywriting Avançado):
    - FAQ: 5 a 7 perguntas frequentes.
    - SCHEMA JSON-LD OCULTO em comentário HTML ao final.
 
-CATEGORIA_SELECIONADA: Sua Categoria Aqui
+CATEGORIA_SELECIONADA: Sua Categoria Here
 TAGS_SELECIONADAS: tag1, tag2, tag3
 Devolva exclusivamente o código estruturado em Markdown do artigo sem delimitadores Front Matter."""
 
@@ -445,13 +443,12 @@ youtube_id: {video_id_escolhido}
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(final_markdown)
         
-    print(f"✅ Artigo derivado com sucesso e salvo em: {file_path}")
+    print(f"✅ Artigo derivado com sucesso e saved em: {file_path}")
     public_post_url = f"{CONFIG['COMPANY_WEBSITE']}blog/{slug}/"
     solicitar_indexacao_google(public_post_url)
     return True
 
 if __name__ == '__main__':
-    import sys
     sucesso = executar_geracao_youtube()
     if not sucesso:
         sys.exit(1)
