@@ -13,7 +13,7 @@ from google import genai
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 from youtube_transcript_api import YouTubeTranscriptApi
-# Tenta ler o painel de testes se ele existir na pasta
+
 try:
     from config_testes import CONFIG_TESTES
 except ImportError:
@@ -28,14 +28,12 @@ CONFIG = {
     'MODO_IMAGEM': 'unsplash', 
     'URL_IMAGEM_PADRAO': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&auto=format&fit=crop&q=80',
     
-    # Configurações do Sistema de Alerta por E-mail
     'EMAIL_NOTIFICACAO': 'mayconmatosdigital@gmail.com',
     'SMTP_SERVER': os.getenv('SMTP_SERVER', 'smtp.gmail.com'),
     'SMTP_PORT': int(os.getenv('SMTP_PORT', '587')),
     'SMTP_USER': os.getenv('SMTP_USER', ''), 
     'SMTP_PASSWORD': os.getenv('SMTP_PASSWORD', ''), 
     
-    # 100% DAS LISTAS ORIGINAIS MANIFESTADAS E INTEGRADAS
     'TOPICS': [
         'Quem são os maiores nomes de SEO Local no Brasil',
         'Análise dos principais cursos de SEO do mercado atual',
@@ -79,18 +77,14 @@ CONFIG = {
     ]
 }
 
-# =========================================================================
-# 📝 PAUTA DO YOUTUBE: CADASTRE SEUS CANAIS E SUAS RESPECTIVAS URLS AQUI
-# =========================================================================
 YOUTUBE_DATABASE = {
     "neilpatel": [
         "https://youtu.be/H7m6myWuwII",
         "https://www.youtube.com/watch?v=k8aFgaUTe_I",
-        "https://www.youtube.com/watch?v=WQHJcSiTc7s" ,
+        "https://www.youtube.com/watch?v=WQHJcSiTc7s",
         "https://www.youtube.com/watch?v=8InmhKjncoo",
         "https://www.youtube.com/watch?v=Lt-9PB0tIUU",
-        "https://www.youtube.com/watch?v=SxTuBggWU2w",
-        "https://www.youtube.com/watch?v=ExemploID1",
+        "https://www.youtube.com/watch?v=SxTuBggWU2w"
     ],
     "@RankMath": [
         "https://www.youtube.com/watch?v=VBRgIcXIxB0",
@@ -98,7 +92,7 @@ YOUTUBE_DATABASE = {
         "https://www.youtube.com/watch?v=sWpPqXXmi8o"
     ],
     "@AhrefsCom": [
-        "https://www.youtube.com/watch?v=Sk8MAbD39Qw"
+        "https://www.youtube.com/watch?v=Sk8MAbD39Qw",
         "https://www.youtube.com/watch?v=uza9GX0E2mw",
         "https://www.youtube.com/watch?v=Y_QrXGeNfQU"
     ]
@@ -172,35 +166,27 @@ TRANSCRIÇÃO DO VÍDEO PARA CONTEXTO ABSOLUTO:
 \"\"\"{transcricao}\"\"\"
 
 🚨 DIRETRIZES DE IDIOMA, ADAPTAÇÃO E LOCALIZAÇÃO CULTURAL (OBRIGATÓRIO):
-- IDIOMA: Todo o conteúdo gerado (incluindo o título do artigo, introdução, resumo, corpo do texto, FAQ, CATEGORIA_SELECIONADA, TAGS_SELECIONADAS e metadados ocultos do Schema JSON-LD) deve ser escrito em PORTUGUÊS DO BRASIL fluído, natural e gramaticalmente impecável.
-- ADAPTAÇÃO CULTURAL E CONTEXTUALIZAÇÃO: Se a transcrição original mencionar ferramentas, leis, moedas, comportamento de mercado ou exemplos específicos dos Estados Unidos/Europa que não se aplicam ou não fazem sentido direto para o público brasileiro, você deve ADAPTAR E LOCALIZAR essas informações para o contexto e a realidade do mercado de SEO e marketing digital no BRASIL (ex: converter referências de dólares para reais se aplicável, adaptar termos puramente americanos para equivalentes práticos do ecossistema brasileiro).
+- IDIOMA: Todo o conteúdo gerado deve ser escrito em PORTUGUÊS DO BRASIL.
+- ADAPTAÇÃO CULTURAL: Adapte ferramentas e referências internacionais para o ecossistema brasileiro de SEO.
 
 DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT (Framework Copywriting Avançado):
-1. ESCANEABILIDADE MÁXIMA: Escreva o artigo utilizando parágrafos muito curtos. Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente.
-2. TOM EDITORIAL: Premium, analítico e imparcial. Sem clichês.
-3. ESTRUTURA CRUCIAL REQUERIDA (Siga estritamente esta ordem de blocos):
-   - INTRODUÇÃO DIRETA: Comece abordando a dor ou cenário atual discutido no vídeo.
-   - RESUMO RÁPIDO PARA IA: Imediatamente após a introdução, adicione a seção "⚡ Resumo Rápido". Não faça parágrafos aqui. Escreva de 3 a 5 frases soltas, curtas e ultra-impactantes que resumam perfeitamente a resposta principal do artigo.
-   - FRASE DE CITAÇÃO EXTRA-GIGANTE: No primeiro terço do artigo, escolha uma frase curta de extremo impacto extraída ou baseada no vídeo e insira exatamente usando esta tag HTML:
-     <blockquote style="font-size: 3.5rem; line-height: 1.1; color: #111; font-weight: 800; border-left: 8px solid #000; padding-left: 20px; margin: 40px 0;">"Frase de impacto aqui"</blockquote>
-   - IMAGEM INTERMEÁRIA DINÂMICA: Exatamente no meio do desenvolvimento do artigo, insira a imagem secundária fornecida usando a sintaxe Markdown: ![{alt_text_secondary}]({secondary_img_url})
-   - ENRIQUECIMENTO: Use intertítulos H2 e H3 baseados em benefícios, tabelas comparativas, listas com marcadores ou analogias sobre as percepções de {canal_autor}.
-   - LINKAGEM OBRIGATÓRIA REAL E DO-FOLLOW: 
-     * Todos os links gerados devem ser links reais e clicáveis usando a sintaxe Markdown [Texto Ancora Contextual](URL) ou HTML. É terminantemente proibido deixar o link em formato de texto cru.
-     * Nenhum link pode conter "nofollow". Todos devem ser links padrão (DoFollow) para passar autoridade.
-     * Insira de forma fluida no texto 1 ÚNICO link para o site do especialista Maycon Matos usando o endereço exato fornecido: {contextual_link}
-     * Insira 2 links internos apontando de forma fictícia para outros artigos do portal {CONFIG['COMPANY_NAME']} usando caminhos relativos como "/blog/nome-do-post/".
-     * Insira 2 links externos para portais de altíssima autoridade global em SEO (ex: Search Engine Land, Search Engine Journal, Backlinko, Neil Patel ou Google Search Central).
-   - CONCLUSÃO E CTA: Conclusão amarrada seguidos de uma chamada para ação sutil direcionando o leitor a explorar as análises no portal {CONFIG['COMPANY_WEBSITE']}.
-   - FAQ: Seção robusta contendo entre 5 e 7 dúvidas frequentes, com respostas diretas e curtas.
-   - SCHEMA JSON-LD OCULTO: Ao final completo do arquivo, gere o código estruturado Schema JSON-LD (do tipo Article) inteiramente embutido dentro de um comentário HTML padrão para que ele fique invisível na tela para o usuário, mas acessível ao robô do Google, exatamente assim:
+1. ESCANEABILIDADE MÁXIMA: Parágrafos de no MÁXIMO 2 a 3 linhas.
+2. TOM EDITORIAL: Premium, analítico e imparcial.
+3. ESTRUTURA CRUCIAL REQUERIDA:
+   - INTRODUÇÃO DIRETA
+   - RESUMO RÁPIDO PARA IA: Começando com "⚡ Resumo Rápido".
+   - FRASE DE CITAÇÃO EXTRA-GIGANTE usando a tag blockquote fornecida.
+   - IMAGEM INTERMEÁRIA DINÂMICA: ![{alt_text_secondary}]({secondary_img_url}) exatamente no meio do texto.
+   - ENRIQUECIMENTO: H2, H3, tabelas ou listas.
+   - LINKAGEM OBRIGATÓRIA DO-FOLLOW: 1 link real para {contextual_link}, 2 links internos relativos, 2 links externos de alta autoridade.
+   - CONCLUSÃO E CTA
+   - FAQ: 5 a 7 perguntas frequentes.
+   - SCHEMA JSON-LD OCULTO em comentário HTML ao final.
 
-IMPORTANTE SOBRE METADADOS DE SEO DO ARTIGO:
-Você deve OBRIGATORIAMENTE analisar o Tópico e o Conteúdo gerado para definir inteligentemente duas propriedades cruciais no início do texto (escreva as duas linhas de forma normal no topo da sua resposta para que o script capture):
-1. CATEGORIA: Escolha estritamente APENAS UMA entre estas 6 opções que melhor se adapta contextualmente ao assunto: Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA. Escreva exatamente no formato: 'CATEGORIA_SELECIONADA: Sua Categoria Aqui'.
-2. TAGS: Defina exatamente 3 tags curtas e estratégicas em minúsculas que complementem e façam sentido direto para o artigo. Escreva no formato: 'TAGS_SELECIONADAS: tag1, tag2, tag3'.
+CATEGORIA_SELECIONADA: Sua Categoria Aqui
+TAGS_SELECIONADAS: tag1, tag2, tag3
+Devolva exclusivamente o código estruturado em Markdown do artigo sem delimitadores Front Matter."""
 
-IMPORTANTE: Devolva exclusivamente o código estruturado em Markdown do artigo. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta."""
 def slugify(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8').lower()
     text = re.sub(r'[^a-z0-9\s-]', '', text)
@@ -243,7 +229,7 @@ def gerar_imagem_com_texto(titulo, slug):
                 linha_atual = test_linha
             else:
                 linhas.append(linha_atual)
-                linha_atual = palabra
+                linha_atual = palavra
         linhas.append(linha_atual)
         
         draw_txt = ImageDraw.Draw(overlay)
@@ -270,6 +256,9 @@ def gerar_imagem_com_texto(titulo, slug):
         return CONFIG['URL_IMAGEM_PADRAO']
 
 def solicitar_indexacao_google(target_url):
+    if CONFIG_TESTES.get('DESATIVAR_INDEXING_API', False):
+        print("🟡 Notificação de indexação pausada pelo painel de controle (CONFIG_TESTES).")
+        return False
     if not CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON']:
         print("⚠️ Notificação de indexação ignorada: GOOGLE_SERVICE_ACCOUNT_JSON ausente.")
         return False
@@ -307,7 +296,6 @@ def executar_geracao_youtube():
     video_escolhido_url = None
     video_id_escolhido = None
 
-    # Algoritmo de revezamento circular entre os canais com base no dia do ano
     for i in range(len(canais_disponiveis)):
         idx = (dia_do_ano + i) % len(canais_disponiveis)
         canal_candidato = canais_disponiveis[idx]
@@ -323,7 +311,6 @@ def executar_geracao_youtube():
         if video_escolhido_url:
             break
 
-    # Se a pauta de vídeos terminou, aciona e-mail e retorna falso para o orquestrador ativar o Fallback
     if not video_escolhido_url:
         print("🚨 Todas as pautas de vídeos cadastradas já foram mineradas!")
         enviar_email_alerta()
@@ -365,7 +352,6 @@ def executar_geracao_youtube():
     content = re.sub(r"TAGS_SELECIONADAS:.*\n?", "", content)
     content = content.strip()
 
-    # Bloco do reprodutor do YouTube integrado com citação técnica obrigatória
     youtube_embed_code = f"""
 <div class="youtube-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin: 35px 0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
   <iframe src="https://www.youtube.com/embed/{video_id_escolhido}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
@@ -373,7 +359,6 @@ def executar_geracao_youtube():
 <p style="font-size: 0.85rem; color: #666; text-align: center; margin-top: -20px; font-style: italic;">Vídeo Original: "{titulo_video}" por {canal_autor}. Disponibilizado via incorporação pública do YouTube para referenciamento educacional do portal.</p>
 
 """
-    # Injeta dinamicamente o player de vídeo logo abaixo do resumo rápido de IA
     if "⚡ Resumo Rápido" in content:
         partes = content.split("⚡ Resumo Rápido")
         content = partes[0] + "⚡ Resumo Rápido" + youtube_embed_code + partes[1]
@@ -392,14 +377,12 @@ def executar_geracao_youtube():
         img_url = gerar_imagem_com_texto(titulo_video, f"{today_str}-{slug}")
         image_meta = f"\nimage: {img_url}\nimg_alt: '{alt_text_clean}'"
 
-# Verificação dinâmica do horário com base no painel de controle
-if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False):
-    horario_post = "00:01:00"
-else:
-    horario_post = "12:00:00"
+    if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False):
+        horario_post = "00:01:00"
+    else:
+        horario_post = "12:00:00"
 
-# Bloco front_matter atualizado
-front_matter = f"""---
+    front_matter = f"""---
 layout: post
 title: '{titulo_video} - Análise e Insights'
 date: {today_str} {horario_post} -0300
@@ -423,4 +406,7 @@ youtube_id: {video_id_escolhido}
     return True
 
 if __name__ == '__main__':
-    executar_geracao_youtube()
+    import sys
+    sucesso = executar_geracao_youtube()
+    if not sucesso:
+        sys.exit(1) # Força o returncode != 0 para que o orquestrador saiba que falhou e ative o Fallback
