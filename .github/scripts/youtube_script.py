@@ -16,6 +16,15 @@ from google.auth.transport.requests import Request
 import subprocess
 import traceback
 
+# Força instalação e atualização limpa da biblioteca oficial no ambiente isolado do Runner
+try:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "youtube-transcript-api"])
+except Exception as e:
+    print(f"⚠️ Erro ao atualizar pip: {e}")
+
+# Importação direta e segura
+import youtube_transcript_api
+
 # Limpa o cache do Python para evitar conflitos de caminhos locais no Runner
 if 'youtube_transcript_api' in sys.modules:
     del sys.modules['youtube_transcript_api']
@@ -140,10 +149,22 @@ def obter_metadados_youtube(url):
     return None, None
 
 def obter_transcricao(video_id):
-    """Usa estritamente a classe correta da biblioteca oficial para extração."""
+    """
+    Abordagem multi-camadas para invocar a transcrição sem depender exclusivamente do mapeamento estático do objeto.
+    """
     try:
+        # Camada 1: Tenta puxar diretamente pelo método do módulo principal
+        if hasattr(youtube_transcript_api, 'YouTubeTranscriptApi'):
+            classe_api = getattr(youtube_transcript_api, 'YouTubeTranscriptApi')
+            if hasattr(classe_api, 'get_transcript'):
+                lista = classe_api.get_transcript(video_id, languages=['pt', 'en'])
+                return " ".join([item['text'] for item in lista])
+        
+        # Camada 2: Fallback direto da API de Transcrição Oficial
+        from youtube_transcript_api import YouTubeTranscriptApi
         lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
         return " ".join([item['text'] for item in lista])
+        
     except Exception as e:
         print(f"❌ Falha crítica na API de Transcrição para o ID {video_id}: {e}")
         return None
