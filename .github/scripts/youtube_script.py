@@ -180,7 +180,8 @@ def obter_metadados_youtube(url):
 
 def obter_transcricao(video_id):
     try:
-        lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
+        # Correção aplicada: acessando get_transcript como um método estático da classe
+        lista = youtube_transcript_api.YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
         return " ".join([item['text'] for item in lista])
     except Exception as e:
         print(f"❌ Não foi possível carregar a transcrição do vídeo {video_id}: {e}")
