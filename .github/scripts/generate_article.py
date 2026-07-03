@@ -383,3 +383,4 @@ tags: [{selected_tags}]{image_meta}
 
 if __name__ == '__main__':
     main()
+
