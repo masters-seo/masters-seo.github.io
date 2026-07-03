@@ -14,8 +14,20 @@ from google import genai
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 
-# IMPORTAÇÃO CORRIGIDA: Importa apenas a classe necessária e remove a duplicidade
-from youtube_transcript_api import YouTubeTranscriptApi
+import subprocess
+
+# Remove do cache do Python qualquer tentativa de carregar arquivos locais com o mesmo nome
+if 'youtube_transcript_api' in sys.modules:
+    del sys.modules['youtube_transcript_api']
+
+try:
+    from youtube_transcript_api import YouTubeTranscriptApi
+except (ImportError, AttributeError):
+    # Força a instalação limpa da biblioteca oficial caso não exista no ambiente do runner
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "youtube-transcript-api"])
+    if 'youtube_transcript_api' in sys.modules:
+        del sys.modules['youtube_transcript_api']
+    from youtube_transcript_api import YouTubeTranscriptApi
 
 # Garante a importação correta do config_testes indepedente de onde o script foi chamado
 script_dir = os.path.dirname(os.path.abspath(__file__))
