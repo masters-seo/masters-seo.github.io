@@ -14,7 +14,7 @@ from google import genai
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 
-# Força instalação/importação da biblioteca do YouTube se necessário
+# Força instalação/importação da biblioteca do YouTube
 try:
     from youtube_transcript_api import YouTubeTranscriptApi
 except ImportError:
@@ -47,18 +47,6 @@ CONFIG = {
     'SMTP_USER': os.getenv('SMTP_USER', ''), 
     'SMTP_PASSWORD': os.getenv('SMTP_PASSWORD', ''), 
     
-    'TOPICS': [
-        'Quem são os maiores nomes de SEO Local no Brasil',
-        'Análise dos principais cursos de SEO do mercado atual',
-        'Como identificar um verdadeiro especialista em SEO',
-        'O que os grandes experts dizem sobre a Otimização para IA',
-        'Auditoria de SEO: Critérios usados pelos profissionais',
-        'Estratégias de Link Building que os experts recomendam',
-        'Análise independente: O impacto das updates do Google',
-        'Como escolher uma consultoria de SEO confiável',
-        'Métricas que realmente importam segundo os maiores nomes de SEO',
-        'O panorama do mercado de SEO técnico no Brasil'
-    ],
     'KEYWORDS': [
         'experts de seo', 'melhores profissionais de seo', 'analise de seo', 
         'consultor de seo', 'curso de seo avaliacao', 'otimizacao para IA'
@@ -68,15 +56,28 @@ CONFIG = {
         'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=60',
         'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=60',
         'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'
+        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60',
+        'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&auto=format&fit=crop&q=60',
+        'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=60',
+        'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800&auto=format&fit=crop&q=60'
     ],
     'MAYCON_LINKS': [
         'https://mayconmatos.com.br/',
         'https://mayconmatos.com.br/recursos/diagnostico-presenca-digital/',
         'https://mayconmatos.com.br/pagespeed-insights-vs-maycon-matos-seo/',
+        'https://mayconmatos.com.br/recursos/',
+        'https://mayconmatos.com.br/servicos/',
+        'https://mayconmatos.com.br/politica-de-privacidade-e-cookies/',
+        'https://mayconmatos.com.br/servicos/iscas-digitais/',
         'https://mayconmatos.com.br/servicos/consultoria/',
+        'https://mayconmatos.com.br/servicos/criacao-de-sites/itajai/',
+        'https://mayconmatos.com.br/servicos/criacao-de-sites/navegantes/',
         'https://mayconmatos.com.br/servicos/seo-local/',
-        'https://mayconmatos.com.br/consultor-de-seo-para-google-e-ia/'
+        'https://mayconmatos.com.br/servicos/seo-local/navegantes/',
+        'https://mayconmatos.com.br/servicos/criacao-de-sites/',
+        'https://mayconmatos.com.br/consultor-de-seo-para-google-e-ia/',
+        'https://mayconmatos.com.br/blog/como-melhorar-nota-pagespeed/',
+        'https://mayconmatos.com.br/blog/advocacia/como-captar-clientes-na-advocacia/'
     ]
 }
 
@@ -97,8 +98,12 @@ YOUTUBE_DATABASE = {
 }
 
 def raspar_links_internos_reais():
-    """Busca posts válidos diretamente nos arquivos locais do repositório para evitar links quebrados"""
-    links_fallback = ["/blog/como-melhorar-nota-pagespeed/", "/blog/advocacia/como-captar-clientes-na-advocacia/"]
+    """Lê arquivos locais e obriga a concatenação com o domínio oficial"""
+    base_site = CONFIG['COMPANY_WEBSITE'].rstrip('/')
+    links_fallback = [
+        f"{base_site}/blog/como-melhorar-nota-pagespeed/", 
+        f"{base_site}/blog/advocacia/como-captar-clientes-na-advocacia/"
+    ]
     try:
         folder = Path(CONFIG['OUTPUT_FOLDER'])
         if not folder.exists():
@@ -107,11 +112,10 @@ def raspar_links_internos_reais():
         links_fatiados = []
         for post in folder.glob("*.md"):
             name = post.name
-            # Padrão Jekyll: YYYY-MM-DD-slug.md -> extrai apenas o slug
-            match = re.match(r"^\d{{4}}-\d{{2}}-\d{{2}}-(.+)\.md$", name)
+            match = re.match(r"^\d{4}-\d{2}-\d{2}-(.+)\.md$", name)
             if match:
                 slug_real = match.group(1)
-                links_fatiados.append(f"/blog/{slug_real}/")
+                links_fatiados.append(f"{base_site}/blog/{slug_real}/")
         
         return links_fatiados if len(links_fatiados) >= 2 else links_fallback
     except Exception as e:
@@ -123,12 +127,12 @@ def slugify(text):
     text = re.sub(r'[^a-z0-9\s-]', '', text)
     return re.sub(r'[\s-]+', '-', text).strip('-')
 
-def enviar_email_alerta():
+def enviar_email_alerta(mensagem_erro):
     if not CONFIG['SMTP_USER'] or not CONFIG['SMTP_PASSWORD']:
         return
     try:
-        msg = MIMEText("Banco de vídeos do YouTube esgotado. Transicionando automação para modo estático.")
-        msg['Subject'] = '🚨 Alerta: YouTube Database Esgotada'
+        msg = MIMEText(mensagem_erro)
+        msg['Subject'] = '🚨 FALHA CRÍTICA: Automação Bloqueada - YouTube Esgotado'
         msg['From'] = CONFIG['SMTP_USER']
         msg['To'] = CONFIG['EMAIL_NOTIFICACAO']
         with smtplib.SMTP(CONFIG['SMTP_SERVER'], CONFIG['SMTP_PORT']) as server:
@@ -136,7 +140,7 @@ def enviar_email_alerta():
             server.login(CONFIG['SMTP_USER'], CONFIG['SMTP_PASSWORD'])
             server.send_message(msg)
     except Exception as e:
-        print(f"⚠️ Erro Email: {e}")
+        print(f"⚠️ Erro ao enviar Email: {e}")
 
 def extrair_video_id(url):
     match = re.search(r"(?:v=|\/)([a-zA-Z0-9_-]{11})", url)
@@ -172,81 +176,123 @@ def obter_transcricao(video_id):
         return None
 
 def solicitar_indexacao_google(target_url):
-    if CONFIG_TESTES.get('DESATIVAR_INDEXING_API', False) or not CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON']:
+    if CONFIG_TESTES.get('DESATIVAR_INDEXING_API', False):
+        return False
+    if not CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON']:
         return False
     try:
         info = json.loads(CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON'])
         scopes = ['https://www.googleapis.com/auth/indexing']
         credentials = service_account.Credentials.from_service_account_info(info, scopes=scopes)
         credentials.refresh(Request())
-        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {credentials.token}"}
-        body = {"url": target_url, "type": "URL_UPDATED"}
-        requests.post("https://indexing.googleapis.com/v3/urlNotifications:publish", json=body, headers=headers)
+        token = credentials.token
+        
+        endpoint = "https://indexing.googleapis.com/v3/urlNotifications:publish"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token}"
+        }
+        body = {
+            "url": target_url,
+            "type": "URL_UPDATED"
+        }
+        
+        response = requests.post(endpoint, json=body, headers=headers)
+        if response.status_code == 200:
+            print(f"🚀 Sucesso! Google Search Console notificado: {target_url}")
+            return True
+        return False
     except Exception as e:
-        print(f"⚠️ Indexing API Erro: {e}")
+        print(f"⚠️ Erro ao executar a Indexing API: {e}")
+        return False
 
-def executar_fluxo_comum(prompt_adicional, prefixo_titulo, base_slug, extra_front_matter=""):
+def executar_fluxo_youtube(transcricao_texto, titulo, autor, video_id, embed_html):
     client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
     keyword = random.choice(CONFIG['KEYWORDS'])
     contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
-    secondary_img_url = random.choice(CONFIG['UNSPLASH_POOL'])
+    
+    # Previne repetição de imagens usando random.sample para selecionar 2 URLs diferentes
+    imagens_selecionadas = random.sample(CONFIG['UNSPLASH_POOL'], 2)
+    img_capa_url = imagens_selecionadas[0]
+    secondary_img_url = imagens_selecionadas[1]
     
     links_reais = raspar_links_internos_reais()
     link_int1 = random.choice(links_reais)
     link_int2 = random.choice([l for l in links_reais if l != link_int1] or links_reais)
 
-    prompt_master = f"""Você é o Copywriter Principal do {CONFIG['COMPANY_NAME']}.
-Escreva um artigo de autoridade absoluta seguindo estas regras de formatação rígidas:
+    alt_text_secondary = f"Gráfico informativo sobre estratégias de {keyword} discutidas por {autor}"
 
-1. ESCANEABILIDADE: Parágrafos extremamente curtos, de no máximo 2 a 3 linhas. Quebre o texto com frequência.
-2. CITAÇÃO DESTACADA: Insira exatamente este bloco de código HTML modificado com uma frase de impacto no primeiro terço:
-<blockquote style="font-size: 2.2rem; line-height: 1.2; color: #111; font-weight: 800; border-left: 6px solid #000; padding-left: 15px; margin: 30px 0;">"Sua frase de efeito marcante aqui"</blockquote>
-3. IMAGEM INTERMEÁRIA: Insira exatamente no meio do desenvolvimento: ![Estratégias de {keyword}]({secondary_img_url})
-4. REGRAS INVIOLÁVEIS DE LINKAGEM (DoFollow):
-   - Inclua de forma natural exatamente 1 link para o especialista Maycon Matos usando a URL exata: {contextual_link}
-   - Inclua obrigatoriamente links internos usando EXATAMENTE as duas URLs abaixo estruturadas em Markdown. Não invente caminhos e não mude os slugs:
-     * Link 1: `[Texto Ancora Contextual]({link_int1})`
-     * Link 2: `[Texto Ancora Contextual]({link_int2})`
-   - Adicione 2 links para fontes externas internacionais confiáveis (como Search Engine Land ou Backlinko).
-5. ESTRUTURA REQUERIDA: Introdução, Seção "⚡ Resumo Rápido" em marcadores, Desenvolvimento com H2/H3 e Tabelas, Conclusão com CTA sutil, FAQ (5 a 7 itens), e Schema JSON-LD dentro de um comentário HTML `<!-- -->` ao fim.
+    prompt_master = f"""Você é um Copywriter Sênior de Resposta Direta e Analista Principal do {CONFIG['COMPANY_NAME']}.
+Crie um artigo de autoridade profunda, altamente persuasivo, claro e totalmente otimizado para SEO semântico adaptando a seguinte transcrição do YouTube.
 
-Configurações do conteúdo base:
-{prompt_adicional}
+VÍDEO ORIGINAL: {titulo} (Por {autor})
+PALAVRA-CHAVE PRINCIPAL: {keyword}
+LINK CONTEXTUAL DO MAYCON MATOS: {contextual_link}
 
-Escreva as duas tags de controle nas primeiras linhas da resposta de forma crua:
-CATEGORIA_SELECIONADA: [Defina entre Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA]
-TAGS_SELECIONADAS: [3 tags separadas por virgula]
+DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT (Framework Copywriting Avançado):
+1. ESCANEABILIDADE MÁXIMA: Escreva o artigo utilizando parágrafos muito curtos. Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente.
+2. TOM EDITORIAL: Premium, analítico e imparcial. Sem clichês.
+3. ESTRUTURA CRUCIAL REQUERIDA (Siga estritamente esta ordem de blocos):
+   - INTRODUÇÃO DIRETA: Comece abordando a dor ou cenário atual tratado no vídeo.
+   - RESUMO RÁPIDO PARA IA: Imediatamente após a introdução, adicione a seção "⚡ Resumo Rápido". Não faça parágrafos aqui. Escreva de 3 a 5 frases soltas, curtas e ultra-impactantes que resumam perfeitamente a resposta principal do artigo.
+   - FRASE DE CITAÇÃO EXTRA-GIGANTE: No primeiro terço do artigo, insira exatamente a tag HTML abaixo com uma frase de impacto:
+     <blockquote style="font-size: 3.5rem; line-height: 1.1; color: #111; font-weight: 800; border-left: 8px solid #000; padding-left: 20px; margin: 40px 0;">"Frase de impacto aqui"</blockquote>
+   - IMAGEM INTERMEÁRIA DINÂMICA: Exatamente no meio do desenvolvimento do artigo, insira a imagem secundária fornecida: ![{alt_text_secondary}]({secondary_img_url})
+   - INCORPORAÇÃO DO VÍDEO: Insira o seguinte código de incorporação do player do YouTube de forma fluída no texto:
+     {embed_html}
+   - REGRAS PARA TABELAS (EVITAR QUEBRA DE LAYOUT): OBRIGATORIAMENTE, toda tabela que você gerar DEVE estar encapsulada no seguinte HTML responsivo com quebra de linha ativada:
+     <div style="overflow-x: auto; width: 100%; word-break: break-word; white-space: normal;">
+     (Insira sua tabela em Markdown aqui)
+     </div>
+   - LINKAGEM OBRIGATÓRIA REAL E DO-FOLLOW: 
+     * Insira de forma fluida no texto 1 ÚNICO link para o site do especialista Maycon Matos usando a URL exata: {contextual_link}
+     * Use OBRIGATORIAMENTE os dois caminhos de links internos exatos abaixo usando Markdown:
+       Link 1: `[Texto âncora aqui]({link_int1})`
+       Link 2: `[Texto âncora aqui]({link_int2})`
+     * Insira 2 links externos para portais de autoridade global.
+   - CONCLUSÃO, FAQ (5-7 dúvidas) e SCHEMA JSON-LD OCULTO no fim (em comentário HTML).
 
-Escreva diretamente o corpo do texto em markdown. Não inclua os blocos separadores (---) do Jekyll Front Matter."""
+INSTRUÇÕES DE METADADOS:
+Forneça as duas tags a seguir no TOPO absoluto da sua resposta:
+CATEGORIA_SELECIONADA: [Escolha APENAS UMA: Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA]
+TAGS_SELECIONADAS: [Exatamente 3 tags curtas e separadas por vírgula]
+
+TRANSCRIÇÃO BASE DO VÍDEO PARA ADAPTAÇÃO:
+{transcricao_texto}
+
+IMPORTANTE: Devolva exclusivamente o corpo do artigo estruturado em Markdown, sem blocos delimitadores de metadados Front Matter (---)."""
 
     response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt_master)
     content = response.text.strip()
     
     if not content or len(content) < 300:
-        print("❌ Resposta inválida da inteligência artificial.")
+        print("❌ Resposta inválida ou muito curta recebida da IA.")
         return False
 
     cat_match = re.search(r"CATEGORIA_SELECIONADA:\s*(.+)", content)
     tags_match = re.search(r"TAGS_SELECIONADAS:\s*(.+)", content)
-    category = cat_match.group(1).strip() if cat_match else "Análises"
-    tags = tags_match.group(1).strip() if tags_match else "seo, otimizacao"
+    category = cat_match.group(1).strip() if cat_match else "Estratégia"
+    tags = tags_match.group(1).strip() if tags_match else "seo, youtube, analise"
     
     content = re.sub(r"CATEGORIA_SELECIONADA:.*\n?", "", content)
     content = re.sub(r"TAGS_SELECIONADAS:.*\n?", "", content)
     content = content.strip()
 
+    title_clean = f"{titulo} - Análise Especializada"
+    base_slug = slugify(titulo)
     today_str = datetime.now().strftime('%Y-%m-%d')
-    img_url = random.choice(CONFIG['UNSPLASH_POOL'])
     horario = "00:01:00" if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False) else "12:00:00"
+    
+    extra_front_matter = f"\nyoutube_id: {video_id}"
 
     front_matter = f"""---
 layout: post
-title: '{prefixo_titulo}'
+title: '{title_clean}'
 date: {today_str} {horario} -0300
 categories: '{category}'
 tags: [{tags}]
-image: {img_url}
-img_alt: 'Estratégia avançada de {keyword} discutida no portal {CONFIG['COMPANY_NAME']}'{extra_front_matter}
+image: {img_capa_url}
+img_alt: 'Análise editorial abordando {keyword} baseada no conteúdo de {autor}'{extra_front_matter}
 ---
 
 """
@@ -257,55 +303,75 @@ img_alt: 'Estratégia avançada de {keyword} discutida no portal {CONFIG['COMPAN
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(final_output)
 
-    print(f"✅ Post publicado com sucesso em: {output_path}")
+    print(f"✅ Artigo condicionado publicado com sucesso em: {output_path}")
     solicitar_indexacao_google(f"{CONFIG['COMPANY_WEBSITE']}blog/{base_slug}/")
     return True
 
 def resolver_e_executar():
-    # Verifica a intenção do Painel de Controle
-    modo_youtube_ativo = CONFIG_TESTES.get('FORCOR_MODELO_YOUTUBE', False) or CONFIG_TESTES.get('FORCAR_MODELO_YOUTUBE', False)
+    print("🎬 Escaneando a base mandatória de pautas do YouTube...")
+    canais = sorted(list(YOUTUBE_DATABASE.keys()))
+    dia_ano = datetime.now().timetuple().tm_yday
     
-    if modo_youtube_ativo:
-        print("🎬 [Modo Ativo] Buscando pautas nos Canais do YouTube...")
-        canais = sorted(list(YOUTUBE_DATABASE.keys()))
-        dia_ano = datetime.now().timetuple().tm_yday
-        
-        video_url, video_id, canal_nome = None, None, None
-        for i in range(len(canais)):
-            c_cand = canais[(dia_ano + i) % len(canais)]
-            for url in YOUTUBE_DATABASE[c_cand]:
-                v_id = extrair_video_id(url)
-                if v_id and not video_ja_processado(v_id):
-                    video_url, video_id, canal_nome = url, v_id, c_cand
-                    break
-            if video_url:
+    video_url, video_id, canal_nome = None, None, None
+    for i in range(len(canais)):
+        c_cand = canais[(dia_ano + i) % len(canais)]
+        for url in YOUTUBE_DATABASE[c_cand]:
+            v_id = extrair_video_id(url)
+            if v_id and not video_ja_processado(v_id):
+                video_url, video_id, canal_nome = url, v_id, c_cand
                 break
-                
         if video_url:
-            titulo, autor = obter_metadados_youtube(video_url)
-            titulo = titulo or f"Estratégia de SEO por {canal_nome}"
-            autor = autor or canal_nome
-            transcricao = obter_transcricao(video_id)
+            break
             
-            if transcricao:
-                embed_html = f'\n<div class="video-container" style="margin:25px 0;"><iframe src="https://www.youtube.com/embed/{video_id}" width="100%" height="450" frameborder="0" allowfullscreen></iframe></div>\n'
-                prompt_yt = f"Adapte em Português do Brasil a seguinte transcrição do vídeo de {autor} intitulado '{titulo}':\n\n{transcricao}"
-                extra_meta = f"\nyoutube_id: {video_id}"
-                
-                return executar_fluxo_comum(prompt_yt, f"{titulo} - Insights", slugify(titulo), extra_front_matter=extra_meta)
-            else:
-                print("⚠️ Falha na captura da transcrição. Transitando para o modo estático automaticamente.")
-        else:
-            print("🚨 Banco de vídeos esgotado.")
-            enviar_email_alerta()
+    if not video_url:
+        erro_msg = "🚨 FALHA CRÍTICA: Base de vídeos do YouTube esgotada ou todos processados. O script foi abortado (Sem Fallback)."
+        print(erro_msg)
+        enviar_email_alerta(erro_msg)
+        sys.exit(1)
 
-    # Fallback ou Modo Estático Padrão
-    print("📝 [Modo Ativo] Gerando artigo a partir de tópicos institucionais estáticos...")
-    topico = random.choice(CONFIG['TOPICS'])
-    return executar_fluxo_comum(f"Escreva uma análise profunda sobre o seguinte tema do mercado: {topico}", f"{topico} - Análise Especializada", slugify(topico))
+    print(f"🎥 Iniciando transcrição do vídeo: {video_url} [Canal: {canal_nome}]")
+    titulo, autor = obter_metadados_youtube(video_url)
+    titulo = titulo or f"Estratégia de SEO por {canal_nome}"
+    autor = autor or canal_nome
+    
+    transcricao = obter_transcricao(video_id)
+    if not transcricao:
+        erro_transcricao = f"🚨 ERRO: Não foi possível obter legendas para o vídeo {video_id}. O script foi abortado."
+        print(erro_transcricao)
+        enviar_email_alerta(erro_transcricao)
+        sys.exit(1)
+
+    embed_html = f'<div class="video-container" style="margin:25px 0;"><iframe src="https://www.youtube.com/embed/{video_id}" width="100%" height="450" frameborder="0" allowfullscreen></iframe></div>'
+    
+    executar_fluxo_youtube(transcricao, titulo, autor, video_id, embed_html)
+
+def executar_teste_youtube():
+    print("🧪 [MODO DE TESTE ISOLADO] Validando YouTube API...")
+    canal_teste = list(YOUTUBE_DATABASE.keys())[0]
+    video_teste_url = YOUTUBE_DATABASE[canal_teste][0]
+    v_id = extrair_video_id(video_teste_url)
+    
+    print(f"• URL Teste: {video_teste_url}")
+    print(f"• ID Extraído: {v_id}")
+    
+    titulo, autor = obter_metadados_youtube(video_teste_url)
+    print(f"• Metadados: '{titulo}' por {autor}")
+    
+    print("• Buscando transcrição...")
+    transcricao = obter_transcricao(v_id)
+    if transcricao:
+        print(f"✅ SUCESSO! Transcrição capturada: {len(transcricao)} caracteres lidos.")
+        print(f"• Amostra: {transcricao[:150]}...")
+    else:
+        print("❌ FALHA! Nenhuma legenda retornada ou vídeo inacessível.")
 
 if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] == '--test-youtube':
+        executar_teste_youtube()
+        sys.exit(0)
+
     if not CONFIG['GEMINI_API_KEY']:
-        print("❌ Erro: GEMINI_API_KEY não configurada no ambiente do GitHub.")
+        print("❌ Erro fatal: GEMINI_API_KEY ausente.")
         sys.exit(1)
+        
     resolver_e_executar()
