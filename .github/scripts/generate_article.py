@@ -14,13 +14,21 @@ from google import genai
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 
-# Força instalação/importação da biblioteca do YouTube
+# Força a importação limpa da biblioteca do YouTube
 try:
+    import youtube_transcript_api
     from youtube_transcript_api import YouTubeTranscriptApi
 except ImportError:
     import subprocess
     subprocess.check_call([sys.executable, "-m", "pip", "install", "youtube-transcript-api"])
     from youtube_transcript_api import YouTubeTranscriptApi
+
+# Verifica se importou o módulo correto (evita conflito com arquivo local)
+if not hasattr(YouTubeTranscriptApi, 'get_transcript'):
+    print("❌ ERRO CRÍTICO: Conflito de nomes detectado.")
+    print("O script importou um arquivo local com o nome 'youtube_transcript_api'.")
+    print("Por favor, verifique se existe um arquivo com esse nome na mesma pasta e delete-o.")
+    sys.exit(1)
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
