@@ -234,10 +234,17 @@ def executar_geracao_youtube():
         titulo_video = f"Insights de SEO Avançado - Canal {canal_escolhido}"
         canal_autor = canal_escolhido
 
-    transcricao = obter_transcricao(video_id_escolhido)
-    if not transcricao:
-        print("❌ Transcrição falhou. Forçando acionamento do pipeline de segurança.")
-        return False
+def obter_transcricao(video_id):
+    """
+    Abordagem definitiva usando estritamente a classe correta da biblioteca oficial.
+    """
+    try:
+        # A classe correta com iniciais maiúsculas possui o método estático get_transcript
+        lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
+        return " ".join([item['text'] for item in lista])
+    except Exception as e:
+        print(f"❌ Falha crítica na API de Transcrição para o ID {video_id}: {e}")
+        return None
 
     keyword = random.choice(CONFIG['KEYWORDS'])
     contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
