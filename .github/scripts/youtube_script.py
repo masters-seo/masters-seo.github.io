@@ -108,15 +108,22 @@ YOUTUBE_DATABASE = {
 }
 
 def raspar_links_da_home():
-    """Acessa a home ativa e extrai links internos reais dinamicamente"""
+    """Melhoria na raspagem para o script de mídia do YouTube"""
     links_fallback = ["/blog/como-melhorar-nota-pagespeed/"]
     try:
         print(f"🌐 [Script YouTube] Raspando links reais da Home: {CONFIG['COMPANY_WEBSITE']}")
         resposta = requests.get(CONFIG['COMPANY_WEBSITE'], timeout=15)
         if resposta.status_code != 200:
             return links_fallback
-        links_encontrados = re.findall(r'href=["\'](/blog/[a-zA-Z0-9\-_]+/?)["\']', resposta.text)
-        links_limpos = list(set(links_encontrados))
+        
+        links_encontrados = re.findall(r'href=["\']((?:https://masters-seo\.github\.io)?/blog/[a-zA-Z0-9\-_]+/?)["\']', resposta.text)
+        
+        links_limpos = []
+        for l in links_encontrados:
+            caminho_relativo = l.replace("https://masters-seo.github.io", "")
+            if caminho_relativo not in links_limpos:
+                links_limpos.append(caminho_relativo)
+                
         return links_limpos if links_limpos else links_fallback
     except Exception as e:
         print(f"⚠️ Erro ao raspar home ({e}). Usando fallbacks configurados.")
@@ -204,7 +211,9 @@ DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT (Framework Copywriting Avançado):
    - ENRIQUECIMENTO: H2, H3, tabelas ou listas.
    - LINKAGEM OBRIGATÓRIA DO-FOLLOW: 
      * 1 link real para {contextual_link}
-     * Insira obrigatoriamente estes 2 links internos reais extraídos do nosso site (não invente caminhos fictícios): [{link_interno_1}]({link_interno_1}) e [{link_interno_2}]({link_interno_2})
+     * REGRA DE LINKS INTERNOS CRUCIAL: Você deve usar OBRIGATORIAMENTE os dois caminhos de texto exatos fornecidos abaixo. Não altere uma única letra nem invente slugs novos. Insira-os de forma natural usando a sintaxe Markdown exata:
+       Link Interno Real 1: Use o link `{link_interno_1}` aplicando a sintaxe `[Texto âncora contextual aqui]({link_interno_1})`
+       Link Interno Real 2: Use o link `{link_interno_2}` aplicando a sintaxe `[Texto âncora contextual aqui]({link_interno_2})`
      * 2 links externos de alta autoridade.
    - CONCLUSÃO E CTA
    - FAQ: 5 a 7 perguntas frequentes.
@@ -287,7 +296,7 @@ def solicitar_indexacao_google(target_url):
         print("🟡 Notificação de indexação pausada pelo painel de controle (CONFIG_TESTES).")
         return False
     if not CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON']:
-        print("⚠️ Notificação de indexação ignorada: GOOGLE_SERVICE_ACCOUNT_JSON não configurada.")
+        print("⚠️ Notificação de indexação ignorada: GOOGLE_SERVICE_ACCOUNT_JSON ausente.")
         return False
     try:
         info = json.loads(CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON'])
@@ -361,7 +370,6 @@ def executar_geracao_youtube():
     alt_text_clean = f"Análise de mídia focada em {keyword} a partir do conteúdo de {canal_autor}."
     alt_text_secondary = f"Gráfico analítico e informativos sobre métricas de {keyword} discutidas no material."
 
-    # 🌟 Captura dinâmica dos links reais da Home para o script do YouTube
     links_reais = raspar_links_da_home()
     link_int1 = random.choice(links_reais)
     link_int2 = random.choice([l for l in links_reais if l != link_int1] or links_reais)
