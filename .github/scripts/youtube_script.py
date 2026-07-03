@@ -22,7 +22,7 @@ print(f"DEBUG: Atributos encontrados: {dir(youtube_transcript_api)}")
 # Garante a importação correta do config_testes indepedente de onde o script foi chamado
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
-    sys.path.insert(0, script_dir)
+    sys.path.append(script_dir) # <--- O 'append' coloca no final, resolvendo o conflito
 
 try:
     from config_testes import CONFIG_TESTES
