@@ -14,22 +14,13 @@ from google import genai
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 
-# Força a importação limpa da biblioteca do YouTube
+# Força a importação limpa da biblioteca do YouTube utilizando apenas a classe oficial
 try:
-    import youtube_transcript_api
     from youtube_transcript_api import YouTubeTranscriptApi
 except ImportError:
     import subprocess
     subprocess.check_call([sys.executable, "-m", "pip", "install", "youtube-transcript-api"])
     from youtube_transcript_api import YouTubeTranscriptApi
-
-# Verifica se importou o módulo correto (evita conflito com arquivo local)
-if not hasattr(YouTubeTranscriptApi, 'get_transcript'):
-    print("❌ ERRO CRÍTICO: Conflito de nomes detectado.")
-    print("O script importou um arquivo local com o nome 'youtube_transcript_api'.")
-    print("Por favor, verifique se existe um arquivo com esse nome na mesma pasta e delete-o.")
-    sys.exit(1)
-    
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
@@ -179,9 +170,11 @@ def obter_metadados_youtube(url):
 
 def obter_transcricao(video_id):
     try:
+        # Chamada direta e limpa à classe oficial externa
         lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
         return " ".join([item['text'] for item in lista])
-    except:
+    except Exception as e:
+        print(f"⚠️ Detalhes do erro na API de Legendas: {e}")
         return None
 
 def solicitar_indexacao_google(target_url):
@@ -215,12 +208,11 @@ def solicitar_indexacao_google(target_url):
         print(f"⚠️ Erro ao executar a Indexing API: {e}")
         return False
 
-def executar_fluxo_youtube(transcricao_texto, titulo, autor, video_id, embed_html):
+def ejecutar_fluxo_youtube(transcricao_texto, titulo, autor, video_id, embed_html):
     client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
     keyword = random.choice(CONFIG['KEYWORDS'])
     contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
     
-    # Previne repetição de imagens usando random.sample para selecionar 2 URLs diferentes
     imagens_selecionadas = random.sample(CONFIG['UNSPLASH_POOL'], 2)
     img_capa_url = imagens_selecionadas[0]
     secondary_img_url = imagens_selecionadas[1]
@@ -333,10 +325,9 @@ def resolver_e_executar():
             break
             
     if not video_url:
-        erro_msg = "🚨 FALHA CRÍTICA: Base de vídeos do YouTube esgotada ou todos processados. O script foi abortado (Sem Fallback)."
+        erro_msg = "🚨 Base de vídeos do YouTube esgotada ou todos processados. Acionando Fallback."
         print(erro_msg)
-        enviar_email_alerta(erro_msg)
-        sys.exit(1)
+        return False
 
     print(f"🎥 Iniciando transcrição do vídeo: {video_url} [Canal: {canal_nome}]")
     titulo, autor = obter_metadados_youtube(video_url)
@@ -345,14 +336,12 @@ def resolver_e_executar():
     
     transcricao = obter_transcricao(video_id)
     if not transcricao:
-        erro_transcricao = f"🚨 ERRO: Não foi possível obter legendas para o vídeo {video_id}. O script foi abortado."
-        print(erro_transcricao)
-        enviar_email_alerta(erro_transcricao)
-        sys.exit(1)
+        print(f"❌ Não foi possível obter legendas para o vídeo {video_id}. Retornando para Fallback.")
+        return False
 
     embed_html = f'<div class="video-container" style="margin:25px 0;"><iframe src="https://www.youtube.com/embed/{video_id}" width="100%" height="450" frameborder="0" allowfullscreen></iframe></div>'
     
-    executar_fluxo_youtube(transcricao, titulo, autor, video_id, embed_html)
+    return ejecutar_fluxo_youtube(transcricao, titulo, autor, video_id, embed_html)
 
 def executar_teste_youtube():
     print("🧪 [MODO DE TESTE ISOLADO] Validando YouTube API...")
@@ -370,7 +359,6 @@ def executar_teste_youtube():
     transcricao = obter_transcricao(v_id)
     if transcricao:
         print(f"✅ SUCESSO! Transcrição capturada: {len(transcricao)} caracteres lidos.")
-        print(f"• Amostra: {transcricao[:150]}...")
     else:
         print("❌ FALHA! Nenhuma legenda retornada ou vídeo inacessível.")
 
@@ -383,4 +371,7 @@ if __name__ == '__main__':
         print("❌ Erro fatal: GEMINI_API_KEY ausente.")
         sys.exit(1)
         
-    resolver_e_executar()
+    sucesso = resolver_e_executar()
+    if not sucesso:
+        # Retorna código 1 para o orchestrator saber que precisa rodar o fallback estático
+        sys.exit(1)
