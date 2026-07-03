@@ -38,8 +38,8 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
         run: |
-          # Rodando diretamente o novo script limpo e isolado da raiz do projeto
-          python youtube_direto.py
+          # Executa o script apontando para a subpasta correta
+          python .github/scripts/youtube_direto.py
       
       - name: Commit changes
         run: |
