@@ -14,6 +14,11 @@ from google import genai
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 from youtube_transcript_api import YouTubeTranscriptApi
+import youtube_transcript_api
+print(f"DEBUG: O módulo está sendo carregado de: {youtube_transcript_api.__file__}")
+
+# Isso vai listar o que existe dentro da classe para ver se 'get_transcript' realmente está lá
+print(f"DEBUG: Atributos encontrados: {dir(youtube_transcript_api)}")
 
 # Garante a importação correta do config_testes indepedente de onde o script foi chamado
 script_dir = os.path.dirname(os.path.abspath(__file__))
