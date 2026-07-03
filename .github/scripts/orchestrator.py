@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
 import os
+import sys
 import subprocess
 from datetime import datetime
 
-# Tenta ler o painel de testes se ele existir na mesma pasta
+# Garante que o Python consiga encontrar módulos na mesma pasta deste script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if script_dir not in sys.path:
+    sys.path.insert(0, script_dir)
+
 try:
     from config_testes import CONFIG_TESTES
 except ImportError:
     CONFIG_TESTES = {}
 
 def rodar_script(nome_script):
-    caminho = os.path.join(os.path.dirname(__file__), nome_script)
-    return subprocess.run(["python", caminho]).returncode == 0
+    caminho = os.path.join(script_dir, nome_script)
+    # Executa o script passando o mesmo interpretador Python atual
+    return subprocess.run([sys.executable, caminho]).returncode == 0
 
 def main():
-    # 1. Verifica se há botões forçados no Painel de Testes
     if CONFIG_TESTES.get('FORCAR_MODELO_ESTATICO', False):
         print("🎛️ [Painel Ativo]: Forçando Modelo Estático (Pautas)...")
         rodar_script("generate_article.py")
@@ -28,7 +33,6 @@ def main():
             rodar_script("generate_article.py")
         return
 
-    # 2. Se nenhum botão estiver forçado, segue a regra padrão de par/ímpar do dia do ano
     dia_do_ano = datetime.now().timetuple().tm_yday
     
     if dia_do_ano % 2 == 0:
