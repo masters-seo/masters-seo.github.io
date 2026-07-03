@@ -5,7 +5,6 @@ on:
     - cron: '0 9 * * *' # Roda todos os dias às 09:00 UTC
   workflow_dispatch: # Permite execução manual
 
-
 jobs:
   generate-article:
     runs-on: ubuntu-latest
@@ -28,7 +27,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install google-genai requests pillow youtube-transcript-api google-auth
       
-      - name: Generate article
+      - name: Executar Geração Direta (YouTube)
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
@@ -39,7 +38,8 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
         run: |
-          python .github/scripts/orchestrator.py
+          # Rodando diretamente o novo script limpo e isolado da raiz do projeto
+          python youtube_direto.py
       
       - name: Commit changes
         run: |
@@ -56,7 +56,3 @@ jobs:
           
           # Faz o commit apenas se houver mudanças
           git diff --quiet && git diff --staged --quiet || (git commit -m "Add auto-generated article and assets $(date +'%Y-%m-%d')" && git push)
-- name: Executar Geração Direta
-  env:
-    GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-  run: python youtube_direto.py
