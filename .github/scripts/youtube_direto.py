@@ -1,4 +1,19 @@
+
 #!/usr/bin/env python3
+import sys
+# Remove o diretório local do topo da fila de busca do Python
+if "" in sys.path: sys.path.remove("")
+if "." in sys.path: sys.path.remove(".")
+# Remove o diretório do próprio script da fila para não importar arquivos fantasmas vizinhos
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if script_dir in sys.path: sys.path.remove(script_dir)
+
+# AGORA SIM OS IMPORTS OFICIAIS:
+import requests
+from google import genai
+from youtube_transcript_api import YouTubeTranscriptApi
+# ... resto do código igual ...
 import os
 import sys
 import requests
