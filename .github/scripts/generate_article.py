@@ -7,7 +7,7 @@ import requests
 import json
 import smtplib
 from email.message import EmailMessage
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from google import genai
 # Nova biblioteca para autenticação automática com a API do Google
@@ -84,31 +84,32 @@ URL DA IMAGEM DO MEIO DO ARTIGO: {secondary_img_url}
 ALT TEXT DA IMAGEM DO MEIO: {alt_text_secondary}
 
 DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT:
-1. ESCANEABILIDADE EXTREMA: Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente para gerar leitura dinâmica e fluida. Nunca agrupe blocos densos.
+1. ESCANEABILIDADE EXTREMA: Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente para gerar leitura dinâmica e fluida. Nunca agrupe blocos densos de texto de forma alguma.
 2. TOM EDITORIAL: Premium, analítico, independente e totalmente focado no mercado corporativo real de SEO.
 
-ESTRUTURA CRUCIAL REQUERIDA (Siga estritamente esta ordem de blocos):
+ESTRUTURA CRUCIAL REQUERIDA (Siga estritamente esta ordem de blocos em sua resposta):
 - TÍTULO PRINCIPAL (H1): Crie um título forte baseado no Tópico.
-- INTRODUÇÃO DIRETA: Aborde o cenário de forma impactante em parágrafos de até 3 linhas.
-- FRASE DE CITAÇÃO EXTRA-GIGANTE: Logo nas seções iniciais, adicione uma frase curta de extremo impacto do texto envolvida exatamente nesta tag HTML:
-  <blockquote style="font-size: 2.2rem; line-height: 1.2; color: #111; font-weight: 800; border-left: 6px solid #000; padding-left: 15px; margin: 30px 0;">"Frase de impacto aqui"</blockquote>
-- RESUMO RÁPIDO PARA IA: Adicione um intertítulo "## ⚡ Resumo Rápido: Insights dos Experts". Logo abaixo, inclua de 3 a 5 linhas soltas usando marcadores de bullet points (*), trazendo insights ultra-impactantes que resumam perfeitamente a resposta principal.
+- INTRODUÇÃO DIRETA: Aborde o cenário de forma impactante em parágrafos curtos de até 3 linhas.
+- FRASE DE CITAÇÃO EXTRA-GIGANTE: Logo após os parágrafos introdutórios, adicione uma frase curta de extremo impacto envolvida exatamente nesta tag HTML:
+  <blockquote style="font-size: 2.2rem; line-height: 1.2; color: #111; font-weight: 800; border-left: 6px solid #000; padding-left: 15px; margin: 30px 0;">"Sua frase de forte impacto aqui sobre o tema"</blockquote>
+
+- RESUMO RÁPIDO PARA IA: Adicione o intertítulo "## ⚡ Resumo Rápido: Insights dos Experts". Logo abaixo, inclua obrigatoriamente de 3 a 5 linhas soltas usando marcadores de bullet points (*), trazendo insights ultra-impactantes que resumam a resposta principal.
 - DESENVOLVIMENTO COM INTERTÍTULOS (H2 e H3): Divida em seções estratégicas explorando conceitos como intenção de busca, E-E-A-T e dados estruturados de forma profunda.
-- IMAGEM INTERMEÁRIA DINÂMICA: Exatamente no meio do desenvolvimento do artigo, insira a imagem secundária fornecida usando a sintaxe Markdown: ![{alt_text_secondary}]({secondary_img_url})
-- TABELA COMPARATIVA: Adicione uma tabela comparativa responsiva em Markdown contextualizada com o tema (ex: abordando Tradicional vs Nova Era).
+- IMAGEM INTERMEÁRIA DINÂMICA: Exatamente no meio do desenvolvimento do artigo, insira a imagem secundária fornecida usando a sintaxe clássica Markdown: ![{alt_text_secondary}]({secondary_img_url})
+- TABELA COMPARATIVA: Adicione uma tabela comparativa detalhada e responsiva em Markdown contextualizada com o tema (ex: abordando Tradicional vs Nova Era).
 - LINKAGEM OBRIGATÓRIA DO-FOLLOW: 
   * Insira de forma fluida no texto 1 ÚNICO link do especialista Maycon Matos usando o endereço exato fornecido: [{keyword}]({contextual_link})
   * Insira 2 links internos apontando de forma fictícia para outros artigos do portal usando caminhos relativos como "/blog/nome-do-post/".
   * Insira 2 links externos para portais de altíssima autoridade global em SEO (ex: Search Engine Land, Search Engine Journal, Backlinko, Neil Patel ou Google Search Central). Use o formato padrão do markdown [Nome da Fonte](URL).
-- CONCLUSÃO E CTA: Conclusão amarrada direcionando o leitor de forma sutil a explorar as análises no portal {CONFIG['COMPANY_WEBSITE']}.
-- FAQ COMPLETO: Seção "## FAQ: [Tema]" contendo entre 5 e 7 dúvidas frequentes organizadas com H3 para as perguntas e respostas diretas e curtas logo abaixo.
+- CONCLUSÃO E CTA: Conclusão amarrada direcionando o leitor a explorar as análises no portal {CONFIG['COMPANY_WEBSITE']}.
+- FAQ COMPLETO: Seção "## FAQ: Perguntas Frequentes" contendo entre 5 e 7 dúvidas frequentes organizadas com H3 para as perguntas e respostas diretas e curtas de 2 a 3 linhas logo abaixo.
 - SCHEMA JSON-LD OCULTO: Ao final completo do arquivo, gere o código estruturado Schema JSON-LD (do tipo BlogPosting ou Article) em formato estruturado limpo embutido dentro de um comentário HTML padrão:
   METADADOS OBRIGATÓRIOS PARA O TOP DO ARQUIVO:
 Analise o assunto e gere no início absoluto da sua resposta estas duas linhas textuais para que o script capture:
-'CATEGORIA_SELECIONADA: Sua Categoria Aqui' (Escolha uma entre: Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA).
-'TAGS_SELECIONADAS: tag1, tag2, tag3' (Três tags estratégicas em minúsculas).
+CATEGORIA_SELECIONADA: [Sua Categoria Aqui] (Escolha uma entre: Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA).
+TAGS_SELECIONADAS: [tag1, tag2, tag3] (Três tags estratégicas em minúsculas).
 
-IMPORTANTE: Devolva exclusivamente o código estruturado em Markdown do artigo. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta."""
+IMPORTANTE: Devolva exclusivamente o código estruturado em Markdown com os elementos visuais acima solicitados. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta, pois o script Python irá gerá-los."""
 
 def slugify(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8').lower()
@@ -147,7 +148,7 @@ def gerar_imagem_com_texto(titulo, slug):
         palavras = titulo.split()
         linhas = []
         linha_atual = ""
-        for palavra in palavras:
+        for palabra in palavras:
             test_linha = f"{linha_atual} {palavra}".strip()
             if len(test_linha) * (faixa_altura * 0.18) < W - 60:
                 linha_atual = test_linha
@@ -311,11 +312,10 @@ def main():
 
     title_clean = f"{topic} - Análise Especializada"
     slug = slugify(topic)
-    from datetime import datetime, timezone, timedelta
 
-# Força o fuso horário de Brasília (UTC-3) para o cálculo da data atual
-fuso_brasil = timezone(timedelta(hours=-3))
-today_str = datetime.now(fuso_brasil).strftime('%Y-%m-%d')
+    # CORREÇÃO DA INDENTAÇÃO E INCLUSÃO DO FUSO HORÁRIO BRASIL (UTC-3)
+    fuso_brasil = timezone(timedelta(hours=-3))
+    today_str = datetime.now(fuso_brasil).strftime('%Y-%m-%d')
 
     alt_text_clean = f"Análise editorial focada em {keyword} abordando {topic} - Portal {CONFIG['COMPANY_NAME']}"
     alt_text_secondary = f"Gráfico informativo sobre estratégias de {keyword} e otimização semântica."
@@ -332,12 +332,14 @@ today_str = datetime.now(fuso_brasil).strftime('%Y-%m-%d')
         print("❌ Conteúdo gerado é inválido ou curto demais.")
         return False
 
+    # Extrai categoria e tags geradas pela inteligência artificial
     category_match = re.search(r"CATEGORIA_SELECIONADA:\s*(.+)", content)
     tags_match = re.search(r"TAGS_SELECIONADAS:\s*(.+)", content)
 
     selected_category = category_match.group(1).strip() if category_match else "Análises"
     selected_tags = tags_match.group(1).strip() if tags_match else "seo, marketing-digital, otimizacao"
 
+    # Limpa as linhas técnicas do início da resposta para não poluir o artigo
     content = re.sub(r"CATEGORIA_SELECIONADA:.*\n?", "", content)
     content = re.sub(r"TAGS_SELECIONADAS:.*\n?", "", content)
     content = content.strip()
@@ -358,6 +360,7 @@ today_str = datetime.now(fuso_brasil).strftime('%Y-%m-%d')
     else:
         horario_post = "12:00:00"
 
+    # Montagem do Front Matter do Jekyll
     jekyll_front_matter = f"""---
 layout: post
 title: '{title_clean}'
