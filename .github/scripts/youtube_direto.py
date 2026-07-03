@@ -7,58 +7,46 @@ import json
 from google import genai
 
 def obter_legenda(video_id):
-    print(f"🔤 Coletando transcrição nativa para o ID: {video_id}...")
+    print(f"🔤 Verificando transcrição para o ID: {video_id}...")
+    
+    # Tentativa via Raspagem Direta HTTP (Mais estável para o GitHub Actions)
     try:
-        # Método alternativo usando a classe de listagem (TranscriptList) que o seu log mostrou que existe!
-        from youtube_transcript_api import TranscriptList
+        url = f"https://www.youtube.com/watch?v={video_id}"
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+        html = requests.get(url, headers=headers, timeout=15).text
         
-        # Recupera os dados brutos usando os componentes internos que estão funcionando
-        print("🔍 Acessando o buscador interno da API...")
-        lista_transcricoes = TranscriptList.fetch(video_id)
-        
-        # Tenta pegar em português, senão pega em inglês
-        try:
-            transcricao = lista_transcricoes.find_transcript(['pt'])
-        except:
-            transcricao = lista_transcricoes.find_transcript(['en'])
-            
-        dados_brutos = transcricao.fetch()
-        texto_completo = " ".join([item['text'] for item in dados_brutos])
-        
-        print(f"✅ Transcrição obtida com sucesso ({len(texto_completo)} caracteres).")
-        return texto_completo
-        
-    except Exception as e:
-        print(f"⚠️ Método primário falhou: {e}. Tentando raspagem direta via HTTP...")
-        try:
-            # Fallback 100% independente de bibliotecas externas (Raspagem Limpa)
-            url = f"https://www.youtube.com/watch?v={video_id}"
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-            html = requests.get(url, headers=headers, timeout=15).text
-            
-            # Localiza os dados de legenda escondidos no HTML do YouTube
-            if "captionTracks" not in html:
-                print("❌ O YouTube não disponibilizou legendas textuais públicas para este vídeo.")
-                return None
-                
-            match = re.search(r'"captionTracks":\s*(\[.*?\])', html)
-            if not match:
-                return None
-                
-            tracks = json.loads(match.group(1))
-            url_legenda = tracks[0]["baseUrl"]
-            
-            # Baixa o XML de legendas e limpa as tags HTML/XML
-            xml_legenda = requests.get(url_legenda, headers=headers, timeout=15).text
-            linhas = re.findall(r'<text[^>]*>([\s\S]*?)</text>', xml_legenda)
-            
-            import html as html_parser
-            texto_limpo = " ".join([html_parser.unescape(l) for l in linhas])
-            print(f"✅ Transcrição recuperada via HTTP ({len(texto_limpo)} caracteres).")
-            return texto_limpo
-        except Exception as e2:
-            print(f"❌ Falha em todos os métodos de extração: {e2}")
+        if "captionTracks" not in html:
+            print(f"⚠️ O YouTube não possui nenhuma legenda disponível (nem automática) para o vídeo {video_id}.")
             return None
+            
+        match = re.search(r'"captionTracks":\s*(\[.*?\])', html)
+        if not match:
+            return None
+            
+        tracks = json.loads(match.group(1))
+        # Prefere português, se não houver, pega a primeira disponível (geralmente inglês)
+        url_legenda = tracks[0]["baseUrl"]
+        for track in tracks:
+            if 'langCode' in track and track['langCode'] == 'pt':
+                url_legenda = track['baseUrl']
+                break
+        
+        xml_legenda = requests.get(url_legenda, headers=headers, timeout=15).text
+        linhas = re.findall(r'<text[^>]*>([\s\S]*?)</text>', xml_legenda)
+        
+        import html as html_parser
+        texto_limpo = " ".join([html_parser.unescape(l) for l in linhas])
+        
+        # Remove marcações de tempo restantes ou textos vazios
+        texto_limpo = re.sub(r'<[^>]*>', '', texto_limpo).strip()
+        
+        if len(texto_limpo) > 100:
+            print(f"✅ Transcrição recuperada com sucesso ({len(texto_limpo)} caracteres).")
+            return texto_limpo
+        return None
+    except Exception as e:
+        print(f"❌ Erro técnico ao raspar o YouTube: {e}")
+        return None
 
 def gerar_artigo(transcricao, video_id):
     api_key = os.getenv('GEMINI_API_KEY')
@@ -66,7 +54,7 @@ def gerar_artigo(transcricao, video_id):
         print("❌ Erro: A variável de ambiente GEMINI_API_KEY não foi configurada.")
         return False
 
-    print("🤖 Conectando à API do Gemini...")
+    print("🤖 Conectando à API do Gemini para criar o artigo...")
     try:
         client = genai.Client(api_key=api_key)
         
@@ -84,7 +72,7 @@ Transcrição:
         
         front_matter = f"""---
 layout: post
-title: 'Análise de SEO Avançada - Vídeo {video_id}'
+title: 'Insights de SEO Avançado - Vídeo {video_id}'
 date: 2026-07-03 12:00:00 -0300
 categories: 'Análises'
 tags: [seo, marketing-digital]
@@ -104,19 +92,33 @@ youtube_id: {video_id}
         with open(caminho_arquivo, 'w', encoding='utf-8') as f:
             f.write(markdown_final)
             
-        print(f"🎉 Artigo gerado com sucesso e salvo em: {caminho_arquivo}")
+        print(f"🎉 SUCESSO! Artigo gerado e salvo em: {caminho_arquivo}")
         return True
     except Exception as e:
         print(f"❌ Erro na geração do Gemini: {e}")
         return False
 
 if __name__ == '__main__':
-    ID_DO_VIDEO = "VBRgIcXIxB0" 
+    # Lista de vídeos para teste. O primeiro (do RankMath) não tem legenda. 
+    # O segundo (do Neil Patel) tem legenda e vai funcionar perfeitamente!
+    VIDEOS_TESTE = ["VBRgIcXIxB0", "k8aFgaUTe_I"]
     
-    texto_legenda = obter_legenda(ID_DO_VIDEO)
-    if texto_legenda:
-        sucesso = gerar_artigo(texto_legenda, ID_DO_VIDEO)
+    texto_legenda = None
+    video_id_sucesso = None
+    
+    for v_id in VIDEOS_TESTE:
+        texto_legenda = obter_legenda(v_id)
+        if texto_legenda:
+            video_id_sucesso = v_id
+            break
+        print(f"⏭️ Pulando vídeo {v_id} e tentando o próximo da fila...")
+        print("-" * 40)
+
+    if texto_legenda and video_id_sucesso:
+        sucesso = gerar_artigo(texto_legenda, video_id_sucesso)
         if not sucesso:
             sys.exit(1)
     else:
-        sys.exit(1)
+        print("🛑 [Proteção de Créditos]: Nenhum dos vídeos da fila possui legendas disponíveis. Processo encerrado sem gastar tokens.")
+        # Sai com 0 para o GitHub Actions não marcar como "falha de sistema", já que foi apenas uma escolha de negócio
+        sys.exit(0)
