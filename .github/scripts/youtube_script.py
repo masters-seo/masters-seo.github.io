@@ -13,10 +13,9 @@ from pathlib import Path
 from google import genai
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
-
 import subprocess
 
-# Remove do cache do Python qualquer tentativa de carregar arquivos locais com o mesmo nome
+# Remove do cache do Python qualquer tentativa de carregar arquivos locais poluídos
 if 'youtube_transcript_api' in sys.modules:
     del sys.modules['youtube_transcript_api']
 
@@ -29,7 +28,7 @@ except (ImportError, AttributeError):
         del sys.modules['youtube_transcript_api']
     from youtube_transcript_api import YouTubeTranscriptApi
 
-# Garante a importação correta do config_testes indepedente de onde o script foi chamado
+# Garante a importação correta do config_testes independente de onde o script foi chamado
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
     sys.path.append(script_dir) 
@@ -70,7 +69,7 @@ CONFIG = {
         'O panorama do mercado de SEO técnico no Brasil'
     ],
     'KEYWORDS': [
-        'experts de seo', 'melhores profissionais de seo', 'analise de seo', 
+        'experts de seo', 'melhores professionals de seo', 'analise de seo', 
         'consultor de seo', 'curso de seo avaliacao', 'otimizacao para IA'
     ],
     'UNSPLASH_POOL': [
@@ -189,10 +188,31 @@ def obter_metadados_youtube(url):
     return None, None
 
 def obter_transcricao(video_id):
+    """
+    Sistema Robusto de Extração de Legendas.
+    Testa múltiplas abordagens estruturais para evitar falsos erros de atributo no runner.
+    """
     try:
-        # CHAMADA CORRIGIDA: Usa diretamente a classe importada no topo do arquivo
-        lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
-        return " ".join([item['text'] for item in lista])
+        # Abordagem 1: Método estático clássico na classe importada
+        if hasattr(YouTubeTranscriptApi, 'get_transcript'):
+            lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
+            return " ".join([item['text'] for item in lista])
+            
+        # Abordagem 2: Tenta pelo escopo completo do módulo importado
+        import youtube_transcript_api
+        if hasattr(youtube_transcript_api, 'YouTubeTranscriptApi'):
+            classe_api = getattr(youtube_transcript_api, 'YouTubeTranscriptApi')
+            if hasattr(classe_api, 'get_transcript'):
+                lista = classe_api.get_transcript(video_id, languages=['pt', 'en'])
+                return " ".join([item['text'] for item in lista])
+                
+        # Abordagem 3: Fallback direto pelo método global do wrapper (se existente em forks)
+        if hasattr(youtube_transcript_api, 'get_transcript'):
+            lista = youtube_transcript_api.get_transcript(video_id, languages=['pt', 'en'])
+            return " ".join([item['text'] for item in lista])
+            
+        raise AttributeError("Nenhum método válido 'get_transcript' foi detectado na biblioteca.")
+
     except Exception as e:
         print(f"❌ Não foi possível carregar a transcrição do vídeo {video_id}: {e}")
         return None
