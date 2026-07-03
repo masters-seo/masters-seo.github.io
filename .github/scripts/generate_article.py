@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 import random
 import re
 import unicodedata
@@ -11,17 +12,25 @@ from google import genai
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 
+# Garante a importação correta do config_testes indepedente de onde o script foi chamado
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if script_dir not in sys.path:
+    sys.path.insert(0, script_dir)
+
 try:
     from config_testes import CONFIG_TESTES
 except ImportError:
     CONFIG_TESTES = {}
+
+# Define a raiz do projeto (uma pasta acima de .github/scripts) para salvar os posts no local certo
+RAIZ_PROJETO = Path(script_dir).parents[1]
 
 CONFIG = {
     'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY', ''),
     'GOOGLE_SERVICE_ACCOUNT_JSON': os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON', ''),
     'COMPANY_NAME': os.getenv('COMPANY_NAME', 'Masters SEO'),
     'COMPANY_WEBSITE': os.getenv('COMPANY_WEBSITE', 'https://masters-seo.github.io/'),
-    'OUTPUT_FOLDER': '_posts',
+    'OUTPUT_FOLDER': RAIZ_PROJETO / '_posts',
     'MODO_IMAGEM': 'unsplash', 
     'URL_IMAGEM_PADRAO': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&auto=format&fit=crop&q=80',
     
@@ -38,7 +47,7 @@ CONFIG = {
         'O panorama do mercado de SEO técnico no Brasil'
     ],
     'KEYWORDS': [
-        'experts de seo', 'melhores professionals de seo', 'analise de seo', 
+        'experts de seo', 'melhores profissionais de seo', 'analise de seo', 
         'consultor de seo', 'curso de seo avaliacao', 'otimizacao para IA'
     ],
     'UNSPLASH_POOL': [
@@ -102,7 +111,7 @@ Você deve OBRIGATORIAMENTE analisar o Tópico e o Conteúdo gerado para definir
 1. CATEGORIA: Escolha estritamente APENAS UMA entre estas 6 opções que melhor se adapta contextualmente ao assunto: Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA. Escreva exatamente no formato: 'CATEGORIA_SELECIONADA: Sua Categoria Aqui'.
 2. TAGS: Defina exatamente 3 tags curtas e estratégicas em minúsculas que complementem e façam sentido direto para o artigo. Escreva no formato: 'TAGS_SELECIONADAS: tag1, tag2, tag3'.
 
-IMPORTANTE: Devolva exclusivamente o código estruturado em Markdown do artigo. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta."""
+IMPORTANTE: Devolva exclusivamente o código estruturado in Markdown do artigo. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta."""
 
 def slugify(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8').lower()
@@ -159,7 +168,7 @@ def gerar_imagem_com_texto(titulo, slug):
             current_y += int(faixa_altura * 0.35)
             
         img_final = Image.alpha_composite(img, overlay).convert("RGB")
-        assets_folder = Path("assets/img/posts")
+        assets_folder = RAIZ_PROJETO / "assets/img/posts"
         assets_folder.mkdir(parents=True, exist_ok=True)
         
         final_img_path = assets_folder / f"{slug}.jpg"
@@ -168,7 +177,7 @@ def gerar_imagem_com_texto(titulo, slug):
         if img_path.exists():
             img_path.unlink()
             
-        return f"/{final_img_path}"
+        return f"/assets/img/posts/{slug}.jpg"
     except Exception as e:
         print(f"⚠️ Erro ao gerar imagem customizada: {e}")
         return CONFIG['URL_IMAGEM_PADRAO']
