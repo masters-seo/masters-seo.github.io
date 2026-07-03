@@ -13,6 +13,7 @@ from google import genai
 # Nova biblioteca para autenticação automática com a API do Google
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
+
 # Tenta ler o painel de testes se ele existir na pasta
 try:
     from config_testes import CONFIG_TESTES
@@ -102,9 +103,7 @@ ESTRUTURA CRUCIAL REQUERIDA (Siga estritamente esta ordem de blocos):
 - CONCLUSÃO E CTA: Conclusão amarrada direcionando o leitor de forma sutil a explorar as análises no portal {CONFIG['COMPANY_WEBSITE']}.
 - FAQ COMPLETO: Seção "## FAQ: [Tema]" contendo entre 5 e 7 dúvidas frequentes organizadas com H3 para as perguntas e respostas diretas e curtas logo abaixo.
 - SCHEMA JSON-LD OCULTO: Ao final completo do arquivo, gere o código estruturado Schema JSON-LD (do tipo BlogPosting ou Article) em formato estruturado limpo embutido dentro de um comentário HTML padrão:
-  <!-- {{ ... }} -->
-
-METADADOS OBRIGATÓRIOS PARA O TOP DO ARQUIVO:
+  METADADOS OBRIGATÓRIOS PARA O TOP DO ARQUIVO:
 Analise o assunto e gere no início absoluto da sua resposta estas duas linhas textuais para que o script capture:
 'CATEGORIA_SELECIONADA: Sua Categoria Aqui' (Escolha uma entre: Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA).
 'TAGS_SELECIONADAS: tag1, tag2, tag3' (Três tags estratégicas em minúsculas).
@@ -181,6 +180,10 @@ def gerar_imagem_com_texto(titulo, slug):
         return CONFIG['URL_IMAGEM_PADRAO']
 
 def solicitar_indexacao_google(target_url):
+    if CONFIG_TESTES.get('DESATIVAR_INDEXING_API', False):
+        print("⚠️ Notificação de indexação ignorada: DESATIVAR_INDEXING_API está ativo.")
+        return False
+
     if not CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON']:
         print("⚠️ Notificação de indexação ignorada: GOOGLE_SERVICE_ACCOUNT_JSON não configurada.")
         return False
@@ -214,12 +217,12 @@ def solicitar_indexacao_google(target_url):
         return False
 
 def enviar_email_alerta_topicos():
-    """Envia um e-mail avisando que a lista de tópicos padrão acabou e está usando tendências de busca."""
+    """Envia um e-mail avisando que a lista de tópicos padrão acabou."""
     smtp_user = os.getenv('SMTP_USER')
     smtp_pass = os.getenv('SMTP_PASSWORD')
     
     if not smtp_user or not smtp_pass:
-        print("⚠️ Envio de e-mail cancelado: SMTP_USER ou SMTP_PASSWORD não configurados nas variáveis de ambiente.")
+        print("⚠️ Envio de e-mail cancelado: SMTP_USER ou SMTP_PASSWORD não configurados.")
         return False
         
     try:
@@ -233,9 +236,8 @@ def enviar_email_alerta_topicos():
         )
         msg['Subject'] = "⚠️ Alerta: Lista de Tópicos Esgotada - Masters SEO"
         msg['From'] = smtp_user
-        msg['To'] = smtp_user  # Envia o alerta para o seu próprio e-mail configurado
+        msg['To'] = smtp_user
 
-        # Utiliza conexão segura com o servidor SMTP do Gmail
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             server.login(smtp_user, smtp_pass)
             server.send_message(msg)
@@ -246,7 +248,7 @@ def enviar_email_alerta_topicos():
         return False
 
 def buscar_topicos_tendencia_google(client):
-    """Gera novos temas dinâmicos simulando tendências de busca em alta no Google usando a inteligência artificial."""
+    """Gera novos temas dinâmicos baseados nas tendências em alta do ecossistema de busca do Google."""
     try:
         print("🔍 Pesquisando tendências e tópicos em alta no ecossistema do Google...")
         prompt_fallback = (
@@ -254,7 +256,6 @@ def buscar_topicos_tendencia_google(client):
             "Marketing Digital, SEO técnico, Inteligência Artificial e tráfego orgânico. Forneça uma lista com "
             "exatamente 5 tópicos de títulos de artigos chamativos e altamente clicáveis. "
             "Devolva APENAS as frases dos tópicos em linhas separadas, sem números, sem marcadores e sem aspas."
-            "Ao gerar o artigo Siga as DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT"
         )
         response = client.models.generate_content(
             model='gemini-2.5-flash',
@@ -267,7 +268,6 @@ def buscar_topicos_tendencia_google(client):
     except Exception as e:
         print(f"⚠️ Erro ao buscar tendências via IA: {e}")
     
-    # Fallback extremo caso falhe a geração dinâmica
     return ["Tendências de SEO Semântico para o Próximo Ano"]
 
 def main():
@@ -277,7 +277,7 @@ def main():
 
     client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
     
-    # Controle sequencial de tópicos usando um arquivo local de índice
+    # Controle de Fila usando arquivo de estado indice.txt
     file_index_path = Path("indice.txt")
     if file_index_path.exists():
         try:
@@ -289,18 +289,17 @@ def main():
 
     lista_topicos_padrao = CONFIG['TOPICS']
 
-    # Verifica se a lista padrão chegou ao fim
+    # Se o índice passou da lista fixa, entra no Fallback de Pesquisa de Tendências
     if current_index >= len(lista_topicos_padrao):
-        print("⚠️ Todos os tópicos da lista padrão já foram produzidos.")
-        # Aciona a função de busca dinâmica das tendências do Google
+        print("⚠️ Todos os tópicos da lista padrão já foram produzidos. Ativando pesquisa automática...")
         topicos_dinamicos = buscar_topicos_tendencia_google(client)
         topic = random.choice(topicos_dinamicos)
         
-        # Aciona a função para enviar a notificação por e-mail apenas na primeira execução pós-esgotamento
+        # Envia e-mail de aviso exatamente na primeira execução do esgotamento
         if current_index == len(lista_topicos_padrao):
             enviar_email_alerta_topicos()
     else:
-        # Pega exatamente o próximo tópico da sequência configurada
+        # Segue estritamente a sequência correta da lista: o primeiro da lista é o primeiro feito
         topic = lista_topicos_padrao[current_index]
         print(f"📋 Fila Sequencial: Processando tópico {current_index + 1} de {len(lista_topicos_padrao)}")
 
@@ -349,6 +348,7 @@ def main():
         img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
         image_meta = f"\nimage: {img_url}\nimg_alt: '{alt_text_clean}'"
 
+    # Aplicação exata da flag de publicação imediata trazida do config_testes
     if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False):
         horario_post = "00:01:00"
     else:
@@ -378,12 +378,10 @@ tags: [{selected_tags}]{image_meta}
     public_post_url = f"{CONFIG['COMPANY_WEBSITE']}blog/{slug}/"
     solicitar_indexacao_google(public_post_url)
 
-    # Incrementa e atualiza de forma permanente o controle de posição da fila
+    # Avança a fila gravando o próximo índice permanentemente
     file_index_path.write_text(str(current_index + 1), encoding='utf-8')
 
     return True
 
 if __name__ == '__main__':
     main()
-
-
