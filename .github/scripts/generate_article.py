@@ -74,7 +74,7 @@ CONFIG = {
 
 def build_prompt(topic, keyword, contextual_link, secondary_img_url, alt_text_secondary):
     return f"""Você é um Copywriter Sênior de Resposta Direta e Analista Principal do {CONFIG['COMPANY_NAME']}.
-Crie um artigo de autoridade profunda, altamente persuasivo, claro e totalmente otimizado para SEO semântico.
+Crie um artigo de autoridade profunda, altamente persuasivo, analítico e totalmente otimizado para SEO semântico.
 
 TÓPICO: {topic}
 PALAVRA-CHAVE PRINCIPAL: {keyword}
@@ -82,31 +82,32 @@ LINK CONTEXTUAL DO MAYCON MATOS: {contextual_link}
 URL DA IMAGEM DO MEIO DO ARTIGO: {secondary_img_url}
 ALT TEXT DA IMAGEM DO MEIO: {alt_text_secondary}
 
-DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT (Framework Copywriting Avançado):
-1. ESCANEABILIDADE MÁXIMA: Escreva o artigo utilizando parágrafos muito curtos. Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente.
-2. TOM EDITORIAL: Premium, analítico e imparcial. Sem clichês.
-3. ESTRUTURA CRUCIAL REQUERIDA (Siga estritamente esta ordem de blocos):
-   - INTRODUÇÃO DIRETA: Comece abordando a dor ou cenário atual.
-   - RESUMO RÁPIDO PARA IA: Imediatamente após a introdução, adicione a seção "⚡ Resumo Rápido". Não faça parágrafos aqui. Escreva de 3 a 5 frases soltas, curtas e ultra-impactantes que resumam perfeitamente a resposta principal do artigo.
-   - FRASE DE CITAÇÃO EXTRA-GIGANTE: No primeiro terço do artigo, escolha uma frase curta de extremo impacto do texto e insira exatamente usando esta tag HTML para garantir que a fonte fique pelo menos 5 vezes maior que o normal e crie contraste:
-     <blockquote style="font-size: 3.5rem; line-height: 1.1; color: #111; font-weight: 800; border-left: 8px solid #000; padding-left: 20px; margin: 40px 0;">"Frase de impacto aqui"</blockquote>
-   - IMAGEM INTERMEÁRIA DINÂMICA: Exatamente no meio do desenvolvimento do artigo, insira a imagem secundária fornecida usando a sintaxe Markdown: ![{alt_text_secondary}]({secondary_img_url})
-   - ENRIQUECIMENTO: Use intertítulos H2 e H3 baseados em benefícios.
-   - Tabelas comparativas responsiva com quebra de linha automatica, sem barra de roalagem.
-   - Listas com marcadores ou analogias.
-   - LINKAGEM OBRIGATÓRIA REAL E DO-FOLLOW: 
-     * Todos os links gerados devem ser links reais e clicáveis usando a sintaxe Markdown [Texto Ancora Contextual](URL) ou HTML. É terminantemente proibido deixar o link em formato de texto cru.
-     * Nenhum link pode conter "nofollow". Todos devem ser links padrão (DoFollow) para passar autoridade.
-     * Insira de forma fluida no texto 1 ÚNICO link para o site do especialista Maycon Matos usando o endereço exato fornecido: {contextual_link}
-     * Insira 2 links internos apontando de forma fictícia para outros artigos do portal {CONFIG['COMPANY_NAME']} usando caminhos relativos como "https://masters-seo.github.io/nome-do-post/".
-     * Insira 2 links externos para portais de altíssima autoridade global em SEO (ex: Search Engine Land, Search Engine Journal, Backlinko, Neil Patel ou Google Search Central e outros similares com alta autoridade).
-   - CONCLUSÃO E CTA: Conclusão amarrada seguidos de uma chamada para ação sutil direcionando o leitor a explorar as análises no portal {CONFIG['COMPANY_WEBSITE']}.
-   - FAQ: Seção robusta contendo entre 5 e 7 dúvidas frequentes, com respostas diretas e curtas.
-   - SCHEMA JSON-LD OCULTO: Ao final completo do arquivo, gere o código estruturado Schema JSON-LD (do tipo Article) inteiramente embutido dentro de um comentário HTML padrão para que ele fique invisível na tela para o usuário, mas acessível ao robô do Google, exatamente assim:
-     IMPORTANTE SOBRE METADADOS DE SEO DO ARTIGO:
-Você deve OBRIGATORIAMENTE analisar o Tópico e o Conteúdo gerado para definir inteligentemente duas propriedades cruciais no início do texto (escreva as duas linhas de forma normal no topo da sua resposta para que o script capture):
-1. CATEGORIA: Escolha estritamente APENAS UMA entre estas 6 opções que melhor se adapta contextualmente ao assunto: Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA. Escreva exatamente no formato: 'CATEGORIA_SELECIONADA: Sua Categoria Aqui'.
-2. TAGS: Defina exatamente 3 tags curtas e estratégicas em minúsculas que complementem e façam sentido direto para o artigo. Escreva no formato: 'TAGS_SELECIONADAS: tag1, tag2, tag3'.
+DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT:
+1. ESCANEABILIDADE EXTREMA: Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente para gerar leitura dinâmica e fluida. Nunca agrupe blocos densos.
+2. TOM EDITORIAL: Premium, analítico, independente e totalmente focado no mercado corporativo real de SEO.
+
+ESTRUTURA CRUCIAL REQUERIDA (Siga estritamente esta ordem de blocos):
+- TÍTULO PRINCIPAL (H1): Crie um título forte baseado no Tópico.
+- INTRODUÇÃO DIRETA: Aborde o cenário de forma impactante em parágrafos de até 3 linhas.
+- FRASE DE CITAÇÃO EXTRA-GIGANTE: Logo nas seções iniciais, adicione uma frase curta de extremo impacto do texto envolvida exatamente nesta tag HTML:
+  <blockquote style="font-size: 2.2rem; line-height: 1.2; color: #111; font-weight: 800; border-left: 6px solid #000; padding-left: 15px; margin: 30px 0;">"Frase de impacto aqui"</blockquote>
+- RESUMO RÁPIDO PARA IA: Adicione um intertítulo "## ⚡ Resumo Rápido: Insights dos Experts". Logo abaixo, inclua de 3 a 5 linhas soltas usando marcadores de bullet points (*), trazendo insights ultra-impactantes que resumam perfeitamente a resposta principal.
+- DESENVOLVIMENTO COM INTERTÍTULOS (H2 e H3): Divida em seções estratégicas explorando conceitos como intenção de busca, E-E-A-T e dados estruturados de forma profunda.
+- IMAGEM INTERMEÁRIA DINÂMICA: Exatamente no meio do desenvolvimento do artigo, insira a imagem secundária fornecida usando a sintaxe Markdown: ![{alt_text_secondary}]({secondary_img_url})
+- TABELA COMPARATIVA: Adicione uma tabela comparativa responsiva em Markdown contextualizada com o tema (ex: abordando Tradicional vs Nova Era).
+- LINKAGEM OBRIGATÓRIA DO-FOLLOW: 
+  * Insira de forma fluida no texto 1 ÚNICO link do especialista Maycon Matos usando o endereço exato fornecido: [{keyword}]({contextual_link})
+  * Insira 2 links internos apontando de forma fictícia para outros artigos do portal usando caminhos relativos como "/blog/nome-do-post/".
+  * Insira 2 links externos para portais de altíssima autoridade global em SEO (ex: Search Engine Land, Search Engine Journal, Backlinko, Neil Patel ou Google Search Central). Use o formato padrão do markdown [Nome da Fonte](URL).
+- CONCLUSÃO E CTA: Conclusão amarrada direcionando o leitor de forma sutil a explorar as análises no portal {CONFIG['COMPANY_WEBSITE']}.
+- FAQ COMPLETO: Seção "## FAQ: [Tema]" contendo entre 5 e 7 dúvidas frequentes organizadas com H3 para as perguntas e respostas diretas e curtas logo abaixo.
+- SCHEMA JSON-LD OCULTO: Ao final completo do arquivo, gere o código estruturado Schema JSON-LD (do tipo BlogPosting ou Article) em formato estruturado limpo embutido dentro de um comentário HTML padrão:
+  <!-- {{ ... }} -->
+
+METADADOS OBRIGATÓRIOS PARA O TOP DO ARQUIVO:
+Analise o assunto e gere no início absoluto da sua resposta estas duas linhas textuais para que o script capture:
+'CATEGORIA_SELECIONADA: Sua Categoria Aqui' (Escolha uma entre: Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA).
+'TAGS_SELECIONADAS: tag1, tag2, tag3' (Três tags estratégicas em minúsculas).
 
 IMPORTANTE: Devolva exclusivamente o código estruturado em Markdown do artigo. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta."""
 
@@ -147,7 +148,7 @@ def gerar_imagem_com_texto(titulo, slug):
         palavras = titulo.split()
         linhas = []
         linha_atual = ""
-        for palabra in palavras:
+        for palavra in palavras:
             test_linha = f"{linha_atual} {palavra}".strip()
             if len(test_linha) * (faixa_altura * 0.18) < W - 60:
                 linha_atual = test_linha
@@ -253,6 +254,7 @@ def buscar_topicos_tendencia_google(client):
             "Marketing Digital, SEO técnico, Inteligência Artificial e tráfego orgânico. Forneça uma lista com "
             "exatamente 5 tópicos de títulos de artigos chamativos e altamente clicáveis. "
             "Devolva APENAS as frases dos tópicos em linhas separadas, sem números, sem marcadores e sem aspas."
+            "Ao gerar o artigo Siga as DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT"
         )
         response = client.models.generate_content(
             model='gemini-2.5-flash',
@@ -383,4 +385,3 @@ tags: [{selected_tags}]{image_meta}
 
 if __name__ == '__main__':
     main()
-
