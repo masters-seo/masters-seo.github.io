@@ -6,7 +6,8 @@ from datetime import datetime
 
 # Garante que o diretório base esteja no PATH para importar módulos
 script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(script_dir)
+if script_dir not in sys.path:
+    sys.path.append(script_dir)
 
 try:
     # Tenta importar o arquivo de configuração, se não existir, usa dict vazio
