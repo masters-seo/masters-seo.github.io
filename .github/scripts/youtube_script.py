@@ -107,6 +107,21 @@ YOUTUBE_DATABASE = {
     ]
 }
 
+def raspar_links_da_home():
+    """Acessa a home ativa e extrai links internos reais dinamicamente"""
+    links_fallback = ["/blog/como-melhorar-nota-pagespeed/"]
+    try:
+        print(f"🌐 [Script YouTube] Raspando links reais da Home: {CONFIG['COMPANY_WEBSITE']}")
+        resposta = requests.get(CONFIG['COMPANY_WEBSITE'], timeout=15)
+        if resposta.status_code != 200:
+            return links_fallback
+        links_encontrados = re.findall(r'href=["\'](/blog/[a-zA-Z0-9\-_]+/?)["\']', resposta.text)
+        links_limpos = list(set(links_encontrados))
+        return links_limpos if links_limpos else links_fallback
+    except Exception as e:
+        print(f"⚠️ Erro ao raspar home ({e}). Usando fallbacks configurados.")
+        return links_fallback
+
 def enviar_email_alerta():
     if not CONFIG['SMTP_USER'] or not CONFIG['SMTP_PASSWORD']:
         print("⚠️ Configurações de SMTP ausentes. Notificação por e-mail ignorada.")
@@ -160,7 +175,7 @@ def obter_transcricao(video_id):
         print(f"❌ Não foi possível carregar a transcrição do vídeo {video_id}: {e}")
         return None
 
-def build_youtube_prompt(titulo_video, canal_autor, transcricao, keyword, contextual_link, secondary_img_url, alt_text_secondary):
+def build_youtube_prompt(titulo_video, canal_autor, transcricao, keyword, contextual_link, secondary_img_url, alt_text_secondary, link_interno_1, link_interno_2):
     return f"""Você é um Copywriter Sênior de Resposta Direta e Analista Principal do {CONFIG['COMPANY_NAME']}.
 Crie um artigo de autoridade profunda, altamente persuasivo, claro e totalmente otimizado para SEO semântico adaptando e expandindo o conteúdo de uma transcrição de vídeo.
 
@@ -187,7 +202,10 @@ DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT (Framework Copywriting Avançado):
    - FRASE DE CITAÇÃO EXTRA-GIGANTE usando a tag blockquote fornecida.
    - IMAGEM INTERMEÁRIA DINÂMICA: ![{alt_text_secondary}]({secondary_img_url}) exatamente no meio do texto.
    - ENRIQUECIMENTO: H2, H3, tabelas ou listas.
-   - LINKAGEM OBRIGATÓRIA DO-FOLLOW: 1 link real para {contextual_link}, 2 links internos relativos, 2 links externos de alta autoridade.
+   - LINKAGEM OBRIGATÓRIA DO-FOLLOW: 
+     * 1 link real para {contextual_link}
+     * Insira obrigatoriamente estes 2 links internos reais extraídos do nosso site (não invente caminhos fictícios): [{link_interno_1}]({link_interno_1}) e [{link_interno_2}]({link_interno_2})
+     * 2 links externos de alta autoridade.
    - CONCLUSÃO E CTA
    - FAQ: 5 a 7 perguntas frequentes.
    - SCHEMA JSON-LD OCULTO em comentário HTML ao final.
@@ -269,7 +287,7 @@ def solicitar_indexacao_google(target_url):
         print("🟡 Notificação de indexação pausada pelo painel de controle (CONFIG_TESTES).")
         return False
     if not CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON']:
-        print("⚠️ Notificação de indexação ignorada: GOOGLE_SERVICE_ACCOUNT_JSON ausente.")
+        print("⚠️ Notificação de indexação ignorada: GOOGLE_SERVICE_ACCOUNT_JSON não configurada.")
         return False
     try:
         info = json.loads(CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON'])
@@ -343,8 +361,13 @@ def executar_geracao_youtube():
     alt_text_clean = f"Análise de mídia focada em {keyword} a partir do conteúdo de {canal_autor}."
     alt_text_secondary = f"Gráfico analítico e informativos sobre métricas de {keyword} discutidas no material."
 
+    # 🌟 Captura dinâmica dos links reais da Home para o script do YouTube
+    links_reais = raspar_links_da_home()
+    link_int1 = random.choice(links_reais)
+    link_int2 = random.choice([l for l in links_reais if l != link_int1] or links_reais)
+
     client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
-    prompt = build_youtube_prompt(titulo_video, canal_autor, transcricao, keyword, contextual_link, secondary_img_url, alt_text_secondary)
+    prompt = build_youtube_prompt(titulo_video, canal_autor, transcricao, keyword, contextual_link, secondary_img_url, alt_text_secondary, link_int1, link_int2)
 
     response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
     content = response.text.strip()
