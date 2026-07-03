@@ -12,7 +12,7 @@ CONFIG_TESTES = {
     'FORCAR_MODELO_YOUTUBE': True,
 
     # 🟡 BOTÃO 4: Desativar Indexação no Google Search Console
-    'DESATIVAR_INDEXING_API': False,
+    'DESATIVAR_INDEXING_API': True, # Mudado para True para bater com a trava abaixo
 }
 
 def solicitar_indexacao_google(target_url):
