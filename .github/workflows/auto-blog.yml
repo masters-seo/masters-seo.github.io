@@ -44,6 +44,14 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          
+          # Garante que as pastas existem antes de tentar adicionar arquivos
+          mkdir -p _posts/
+          mkdir -p assets/img/posts/
+          
+          # Adiciona os arquivos se existirem
           git add _posts/*.md || true
           git add assets/img/posts/*.jpg || true
+          
+          # Faz o commit apenas se houver mudanças
           git diff --quiet && git diff --staged --quiet || (git commit -m "Add auto-generated article and assets $(date +'%Y-%m-%d')" && git push)
