@@ -6,13 +6,22 @@ import re
 import unicodedata
 import requests
 import json
+import smtplib
+from email.mime.text import MIMEText
 from datetime import datetime
 from pathlib import Path
 from google import genai
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 
-# Garante a importação correta do config_testes indepedente de onde o script foi chamado
+# Força instalação/importação da biblioteca do YouTube se necessário
+try:
+    from youtube_transcript_api import YouTubeTranscriptApi
+except ImportError:
+    import subprocess
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "youtube-transcript-api"])
+    from youtube_transcript_api import YouTubeTranscriptApi
+
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
     sys.path.insert(0, script_dir)
@@ -22,7 +31,6 @@ try:
 except ImportError:
     CONFIG_TESTES = {}
 
-# Define a raiz do projeto (uma pasta acima de .github/scripts) para salvar os posts no local certo
 RAIZ_PROJETO = Path(script_dir).parents[1]
 
 CONFIG = {
@@ -33,6 +41,11 @@ CONFIG = {
     'OUTPUT_FOLDER': RAIZ_PROJETO / '_posts',
     'MODO_IMAGEM': 'unsplash', 
     'URL_IMAGEM_PADRAO': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&auto=format&fit=crop&q=80',
+    'EMAIL_NOTIFICACAO': 'mayconmatosdigital@gmail.com',
+    'SMTP_SERVER': os.getenv('SMTP_SERVER', 'smtp.gmail.com'),
+    'SMTP_PORT': int(os.getenv('SMTP_PORT', '587')),
+    'SMTP_USER': os.getenv('SMTP_USER', ''), 
+    'SMTP_PASSWORD': os.getenv('SMTP_PASSWORD', ''), 
     
     'TOPICS': [
         'Quem são os maiores nomes de SEO Local no Brasil',
@@ -61,279 +74,238 @@ CONFIG = {
         'https://mayconmatos.com.br/',
         'https://mayconmatos.com.br/recursos/diagnostico-presenca-digital/',
         'https://mayconmatos.com.br/pagespeed-insights-vs-maycon-matos-seo/',
-        'https://mayconmatos.com.br/recursos/',
-        'https://mayconmatos.com.br/servicos/',
-        'https://mayconmatos.com.br/politica-de-privacidade-e-cookies/',
-        'https://mayconmatos.com.br/servicos/iscas-digitais/',
         'https://mayconmatos.com.br/servicos/consultoria/',
-        'https://mayconmatos.com.br/servicos/criacao-de-sites/itajai/',
-        'https://mayconmatos.com.br/servicos/criacao-de-sites/navegantes/',
         'https://mayconmatos.com.br/servicos/seo-local/',
-        'https://mayconmatos.com.br/servicos/seo-local/navegantes/',
-        'https://mayconmatos.com.br/servicos/criacao-de-sites/',
-        'https://mayconmatos.com.br/consultor-de-seo-para-google-e-ia/',
-        'https://mayconmatos.com.br/blog/como-melhorar-nota-pagespeed/',
-        'https://mayconmatos.com.br/blog/advocacia/como-captar-clientes-na-advocacia/'
+        'https://mayconmatos.com.br/consultor-de-seo-para-google-e-ia/'
     ]
 }
 
-def raspar_links_da_home():
-    """Melhoria na raspagem: captura links relativos ou completos de posts reais na home"""
+YOUTUBE_DATABASE = {
+    "neilpatel": [
+        "https://youtu.be/H7m6myWuwII",
+        "https://www.youtube.com/watch?v=k8aFgaUTe_I",
+        "https://www.youtube.com/watch?v=WQHJcSiTc7s"
+    ],
+    "@RankMath": [
+        "https://www.youtube.com/watch?v=VBRgIcXIxB0",
+        "https://www.youtube.com/watch?v=T1iqDNgkxeI"
+    ],
+    "@AhrefsCom": [
+        "https://www.youtube.com/watch?v=Sk8MAbD39Qw",
+        "https://www.youtube.com/watch?v=uza9GX0E2mw"
+    ]
+}
+
+def raspar_links_internos_reais():
+    """Busca posts válidos diretamente nos arquivos locais do repositório para evitar links quebrados"""
     links_fallback = ["/blog/como-melhorar-nota-pagespeed/", "/blog/advocacia/como-captar-clientes-na-advocacia/"]
     try:
-        print(f"🌐 [Script Estático] Raspando links reais da Home: {CONFIG['COMPANY_WEBSITE']}")
-        resposta = requests.get(CONFIG['COMPANY_WEBSITE'], timeout=15)
-        if resposta.status_code != 200:
+        folder = Path(CONFIG['OUTPUT_FOLDER'])
+        if not folder.exists():
             return links_fallback
         
-        # Expressão regular mais abrangente para capturar links com ou sem o domínio inclusos
-        links_encontrados = re.findall(r'href=["\']((?:https://masters-seo\.github\.io)?/blog/[a-zA-Z0-9\-_]+/?)["\']', resposta.text)
+        links_fatiados = []
+        for post in folder.glob("*.md"):
+            name = post.name
+            # Padrão Jekyll: YYYY-MM-DD-slug.md -> extrai apenas o slug
+            match = re.match(r"^\d{{4}}-\d{{2}}-\d{{2}}-(.+)\.md$", name)
+            if match:
+                slug_real = match.group(1)
+                links_fatiados.append(f"/blog/{slug_real}/")
         
-        # Padroniza tudo para caminhos relativos limpos
-        links_limpos = []
-        for l in links_encontrados:
-            caminho_relativo = l.replace("https://masters-seo.github.io", "")
-            if caminho_relativo not in links_limpos:
-                links_limpos.append(caminho_relativo)
-                
-        return links_limpos if links_limpos else links_fallback
+        return links_fatiados if len(links_fatiados) >= 2 else links_fallback
     except Exception as e:
-        print(f"⚠️ Erro ao raspar home ({e}). Usando fallbacks configurados.")
+        print(f"⚠️ Falha ao ler posts locais: {e}")
         return links_fallback
-
-def build_prompt(topic, keyword, contextual_link, secondary_img_url, alt_text_secondary, link_interno_1, link_interno_2):
-    return f"""Você é um Copywriter Sênior de Resposta Direta e Analista Principal do {CONFIG['COMPANY_NAME']}.
-Crie um artigo de autoridade profunda, altamente persuasivo, claro e totalmente otimizado para SEO semântico.
-
-TÓPICO: {topic}
-PALAVRA-CHAVE PRINCIPAL: {keyword}
-LINK CONTEXTUAL DO MAYCON MATOS: {contextual_link}
-URL DA IMAGEM DO MEIO DO ARTIGO: {secondary_img_url}
-ALT TEXT DA IMAGEM DO MEIO: {alt_text_secondary}
-
-DIRETRIZES OBRIGATÓRIAS DE ESCRITA E LAYOUT (Framework Copywriting Avançado):
-1. ESCANEABILIDADE MÁXIMA: Escreva o artigo utilizando parágrafos muito curtos. Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente.
-2. TOM EDITORIAL: Premium, analítico e imparcial. Sem clichês.
-3. ESTRUTURA CRUCIAL REQUERIDA (Siga estritamente esta ordem de blocos):
-   - INTRODUÇÃO DIRETA: Comece abordando a dor ou cenário atual.
-   - RESUMO RÁPIDO PARA IA: Imediatamente após a introdução, adicione a seção "⚡ Resumo Rápido". Não faça parágrafos aqui. Escreva de 3 a 5 frases soltas, curtas e ultra-impactantes que resumam perfeitamente a resposta principal do artigo.
-   - FRASE DE CITAÇÃO EXTRA-GIGANTE: No primeiro terço do artigo, escolha uma frase curta de extremo impacto do texto e insira exatamente usando esta tag HTML para garantir que a fonte fique pelo menos 5 vezes maior que o normal e crie contraste:
-     <blockquote style="font-size: 3.5rem; line-height: 1.1; color: #111; font-weight: 800; border-left: 8px solid #000; padding-left: 20px; margin: 40px 0;">"Frase de impacto aqui"</blockquote>
-   - IMAGEM INTERMEÁRIA DINÂMICA: Exatamente no meio do desenvolvimento do artigo, insira a imagem secundária fornecida usando a sintaxe Markdown: ![{alt_text_secondary}]({secondary_img_url})
-   - ENRIQUECIMENTO: Use intertítulos H2 e H3 baseados em benefícios, tabelas comparativas, listas com marcadores ou analogias.
-   - LINKAGEM OBRIGATÓRIA REAL E DO-FOLLOW: 
-     * Todos os links gerados devem ser links reais e clicáveis usando a sintaxe Markdown [Texto Ancora Contextual](URL) ou HTML. É terminantemente proibido deixar o link em formato de texto cru.
-     * Nenhum link pode conter "nofollow". Todos devem ser links padrão (DoFollow) para passar autoridade.
-     * Insira de forma fluida no texto 1 ÚNICO link para o site do especialista Maycon Matos usando o endereço exato fornecido: {contextual_link}
-     * REGRA DE LINKS INTERNOS CRUCIAL: Você deve usar OBRIGATORIAMENTE os dois caminhos de texto exatos fornecidos abaixo. Não altere uma única letra nem invente slugs novos. Insira-os de forma natural usando a sintaxe Markdown exata:
-       Link Interno Real 1: Use o link `{link_interno_1}` aplicando a sintaxe `[Texto âncora contextual aqui]({link_interno_1})`
-       Link Interno Real 2: Use o link `{link_interno_2}` aplicando a sintaxe `[Texto âncora contextual aqui]({link_interno_2})`
-     * Insira 2 links externos para portais de altíssima autoridade global em SEO (ex: Search Engine Land, Search Engine Journal, Backlinko, Neil Patel ou Google Search Central).
-   - CONCLUSÃO E CTA: Conclusão amarrada seguidos de uma chamada para ação sutil direcionando o leitor a explorar as análises no portal {CONFIG['COMPANY_WEBSITE']}.
-   - FAQ: Seção robusta contendo entre 5 e 7 dúvidas frequentes, com respostas diretas e curtas.
-   - SCHEMA JSON-LD OCULTO: Ao final completo do arquivo, gere o código estruturado Schema JSON-LD (do tipo Article) inteiramente embutido dentro de um comentário HTML padrão.
-
-IMPORTANTE SOBRE METADADOS DE SEO DO ARTIGO:
-Você deve OBRIGATORIAMENTE analisar o Tópico e o Conteúdo gerado para definir duas propriedades cruciais no início do texto (escreva as duas linhas de forma normal no topo da sua resposta para que o script capture):
-1. CATEGORIA: Escolha estritamente APENAS UMA entre estas 6 opções que melhor se adapta contextualmente ao assunto: Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA. Escreva exatamente no formato: 'CATEGORIA_SELECIONADA: Sua Categoria Aqui'.
-2. TAGS: Defina exatamente 3 tags curtas e estratégicas em minúsculas que complementem e façam sentido direto para o artigo. Escreva no formato: 'TAGS_SELECIONADAS: tag1, tag2, tag3'.
-
-IMPORTANTE: Devolva exclusivamente o código estruturado in Markdown do artigo. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta."""
 
 def slugify(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8').lower()
     text = re.sub(r'[^a-z0-9\s-]', '', text)
     return re.sub(r'[\s-]+', '-', text).strip('-')
 
-def gerar_imagem_com_texto(titulo, slug):
+def enviar_email_alerta():
+    if not CONFIG['SMTP_USER'] or not CONFIG['SMTP_PASSWORD']:
+        return
     try:
-        from PIL import Image, ImageDraw, ImageFont
-    except ImportError:
-        print("⚠️ Biblioteca 'Pillow' não instalada. Usando fallback.")
-        return CONFIG['URL_IMAGEM_PADRAO']
-
-    try:
-        img_data = requests.get(CONFIG['URL_IMAGEM_PADRAO']).content
-        img_path = Path("temp_base.jpg")
-        with open(img_path, 'wb') as f:
-            f.write(img_data)
-        
-        img = Image.open(img_path).convert("RGBA")
-        W, H = img.size
-        overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
-        draw = ImageDraw.Draw(overlay)
-        
-        faixa_altura = int(H * 0.25)
-        y0 = (H - faixa_altura) // 2
-        y1 = y0 + faixa_altura
-        
-        draw.rectangle(((0, y0), (W, y1)), fill=(0, 0, 0, 128))
-        
-        try:
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", int(faixa_altura * 0.28))
-        except IOError:
-            font = ImageFont.load_default()
-            
-        palavras = titulo.split()
-        linhas = []
-        linha_atual = ""
-        for palabra in palavras:
-            test_linha = f"{linha_atual} {palavra}".strip()
-            if len(test_linha) * (faixa_altura * 0.18) < W - 60:
-                linha_atual = test_linha
-            else:
-                linhas.append(linha_atual)
-                linha_atual = palavra
-        linhas.append(linha_atual)
-        
-        draw_txt = ImageDraw.Draw(overlay)
-        total_texto_h = len(linhas) * int(faixa_altura * 0.35)
-        current_y = y0 + (faixa_altura - total_texto_h) // 2
-        
-        for linha in linhas:
-            draw_txt.text((W // 2, current_y), linha, fill=(255, 255, 255, 255), font=font, anchor="mm")
-            current_y += int(faixa_altura * 0.35)
-            
-        img_final = Image.alpha_composite(img, overlay).convert("RGB")
-        assets_folder = RAIZ_PROJETO / "assets/img/posts"
-        assets_folder.mkdir(parents=True, exist_ok=True)
-        
-        final_img_path = assets_folder / f"{slug}.jpg"
-        img_final.save(final_img_path, "JPEG")
-        
-        if img_path.exists():
-            img_path.unlink()
-            
-        return f"/assets/img/posts/{slug}.jpg"
+        msg = MIMEText("Banco de vídeos do YouTube esgotado. Transicionando automação para modo estático.")
+        msg['Subject'] = '🚨 Alerta: YouTube Database Esgotada'
+        msg['From'] = CONFIG['SMTP_USER']
+        msg['To'] = CONFIG['EMAIL_NOTIFICACAO']
+        with smtplib.SMTP(CONFIG['SMTP_SERVER'], CONFIG['SMTP_PORT']) as server:
+            server.starttls()
+            server.login(CONFIG['SMTP_USER'], CONFIG['SMTP_PASSWORD'])
+            server.send_message(msg)
     except Exception as e:
-        print(f"⚠️ Erro ao gerar imagem customizada: {e}")
-        return CONFIG['URL_IMAGEM_PADRAO']
+        print(f"⚠️ Erro Email: {e}")
+
+def extrair_video_id(url):
+    match = re.search(r"(?:v=|\/)([a-zA-Z0-9_-]{11})", url)
+    return match.group(1) if match else None
+
+def video_ja_processado(video_id):
+    folder = Path(CONFIG['OUTPUT_FOLDER'])
+    if not folder.exists():
+        return False
+    for post in folder.glob("*.md"):
+        try:
+            if f"youtube_id: {video_id}" in post.read_text(encoding='utf-8'):
+                return True
+        except:
+            continue
+    return False
+
+def obter_metadados_youtube(url):
+    try:
+        res = requests.get(f"https://www.youtube.com/oembed?url={url}&format=json", timeout=10)
+        if res.status_code == 200:
+            d = res.json()
+            return d.get('title'), d.get('author_name')
+    except:
+        pass
+    return None, None
+
+def obter_transcricao(video_id):
+    try:
+        lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
+        return " ".join([item['text'] for item in lista])
+    except:
+        return None
 
 def solicitar_indexacao_google(target_url):
-    if CONFIG_TESTES.get('DESATIVAR_INDEXING_API', False):
-        print("🟡 Notificação de indexação pausada pelo painel de controle (CONFIG_TESTES).")
-        return False
-    if not CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON']:
-        print("⚠️ Notificação de indexação ignorada: GOOGLE_SERVICE_ACCOUNT_JSON não configurada.")
+    if CONFIG_TESTES.get('DESATIVAR_INDEXING_API', False) or not CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON']:
         return False
     try:
         info = json.loads(CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON'])
         scopes = ['https://www.googleapis.com/auth/indexing']
         credentials = service_account.Credentials.from_service_account_info(info, scopes=scopes)
         credentials.refresh(Request())
-        token = credentials.token
-        
-        endpoint = "https://indexing.googleapis.com/v3/urlNotifications:publish"
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {token}"
-        }
-        body = {
-            "url": target_url,
-            "type": "URL_UPDATED"
-        }
-        
-        response = requests.post(endpoint, json=body, headers=headers)
-        if response.status_code == 200:
-            print(f"🚀 Sucesso! Google Search Console notificado: {target_url}")
-            return True
-        else:
-            print(f"❌ Falha ao notificar o Google. Status: {response.status_code}")
-            return False
+        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {credentials.token}"}
+        body = {"url": target_url, "type": "URL_UPDATED"}
+        requests.post("https://indexing.googleapis.com/v3/urlNotifications:publish", json=body, headers=headers)
     except Exception as e:
-        print(f"⚠️ Erro ao executar a Indexing API: {e}")
-        return False
+        print(f"⚠️ Indexing API Erro: {e}")
 
-def main():
-    # Se o painel mandar explicitamente forçar o YouTube, encerra o modelo estático com bypass
-    if CONFIG_TESTES.get('FORCOR_MODELO_YOUTUBE', False) or CONFIG_TESTES.get('FORCAR_MODELO_YOUTUBE', False):
-        print("⏭️ Ignorando Modelo Estático: Painel de Controle configurado para focar no Módulo do YouTube.")
-        return True
-
-    if not CONFIG['GEMINI_API_KEY']:
-        print("❌ GEMINI_API_KEY ausente.")
-        return False
-        
-    topic = random.choice(CONFIG['TOPICS'])
+def executar_fluxo_comum(prompt_adicional, prefixo_titulo, base_slug, extra_front_matter=""):
+    client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
     keyword = random.choice(CONFIG['KEYWORDS'])
     contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
     secondary_img_url = random.choice(CONFIG['UNSPLASH_POOL'])
     
-    links_reais = raspar_links_da_home()
+    links_reais = raspar_links_internos_reais()
     link_int1 = random.choice(links_reais)
     link_int2 = random.choice([l for l in links_reais if l != link_int1] or links_reais)
-    
-    client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
-    print(f"Gerando artigo otimizado sobre: {topic}")
-    
-    title_clean = f"{topic} - Análise Especializada"
-    slug = slugify(topic)
-    today_str = datetime.now().strftime('%Y-%m-%d')
-    
-    alt_text_clean = f"Análise editorial focada em {keyword} abordando {topic} - Portal {CONFIG['COMPANY_NAME']}"
-    alt_text_secondary = f"Gráfico informativo sobre estratégias de {keyword} e otimização semântica."
-    
-    prompt_final = build_prompt(topic, keyword, contextual_link, secondary_img_url, alt_text_secondary, link_int1, link_int2)
-    
-    response = client.models.generate_content(
-        model='gemini-2.5-flash',
-        contents=prompt_final,
-    )
-    
+
+    prompt_master = f"""Você é o Copywriter Principal do {CONFIG['COMPANY_NAME']}.
+Escreva um artigo de autoridade absoluta seguindo estas regras de formatação rígidas:
+
+1. ESCANEABILIDADE: Parágrafos extremamente curtos, de no máximo 2 a 3 linhas. Quebre o texto com frequência.
+2. CITAÇÃO DESTACADA: Insira exatamente este bloco de código HTML modificado com uma frase de impacto no primeiro terço:
+<blockquote style="font-size: 2.2rem; line-height: 1.2; color: #111; font-weight: 800; border-left: 6px solid #000; padding-left: 15px; margin: 30px 0;">"Sua frase de efeito marcante aqui"</blockquote>
+3. IMAGEM INTERMEÁRIA: Insira exatamente no meio do desenvolvimento: ![Estratégias de {keyword}]({secondary_img_url})
+4. REGRAS INVIOLÁVEIS DE LINKAGEM (DoFollow):
+   - Inclua de forma natural exatamente 1 link para o especialista Maycon Matos usando a URL exata: {contextual_link}
+   - Inclua obrigatoriamente links internos usando EXATAMENTE as duas URLs abaixo estruturadas em Markdown. Não invente caminhos e não mude os slugs:
+     * Link 1: `[Texto Ancora Contextual]({link_int1})`
+     * Link 2: `[Texto Ancora Contextual]({link_int2})`
+   - Adicione 2 links para fontes externas internacionais confiáveis (como Search Engine Land ou Backlinko).
+5. ESTRUTURA REQUERIDA: Introdução, Seção "⚡ Resumo Rápido" em marcadores, Desenvolvimento com H2/H3 e Tabelas, Conclusão com CTA sutil, FAQ (5 a 7 itens), e Schema JSON-LD dentro de um comentário HTML `<!-- -->` ao fim.
+
+Configurações do conteúdo base:
+{prompt_adicional}
+
+Escreva as duas tags de controle nas primeiras linhas da resposta de forma crua:
+CATEGORIA_SELECIONADA: [Defina entre Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA]
+TAGS_SELECIONADAS: [3 tags separadas por virgula]
+
+Escreva diretamente o corpo do texto em markdown. Não inclua os blocos separadores (---) do Jekyll Front Matter."""
+
+    response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt_master)
     content = response.text.strip()
-    if not content or len(content) < 300:
-        print("❌ Conteúdo gerado é inválido ou curto demais.")
-        return False
-        
-    category_match = re.search(r"CATEGORIA_SELECIONADA:\s*(.+)", content)
-    tags_match = re.search(r"TAGS_SELECIONADAS:\s*(.+)", content)
     
-    selected_category = category_match.group(1).strip() if category_match else "Análises"
-    selected_tags = tags_match.group(1).strip() if tags_match else "seo, marketing-digital, otimizacao"
+    if not content or len(content) < 300:
+        print("❌ Resposta inválida da inteligência artificial.")
+        return False
+
+    cat_match = re.search(r"CATEGORIA_SELECIONADA:\s*(.+)", content)
+    tags_match = re.search(r"TAGS_SELECIONADAS:\s*(.+)", content)
+    category = cat_match.group(1).strip() if cat_match else "Análises"
+    tags = tags_match.group(1).strip() if tags_match else "seo, otimizacao"
     
     content = re.sub(r"CATEGORIA_SELECIONADA:.*\n?", "", content)
     content = re.sub(r"TAGS_SELECIONADAS:.*\n?", "", content)
     content = content.strip()
-        
-    modo = CONFIG['MODO_IMAGEM'].lower()
-    image_meta = ""
-    
-    if modo == 'unsplash':
-        img_url = random.choice(CONFIG['UNSPLASH_POOL'])
-        image_meta = f"\nimage: {img_url}\nimg_alt: '{alt_text_clean}'"
-    elif modo == 'personalizada':
-        img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
-        image_meta = f"\nimage: {img_url}\nimg_alt: '{alt_text_clean}'"
-    
-    if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False):
-        horario_post = "00:01:00"
-    else:
-        horario_post = "12:00:00"
 
-    jekyll_front_matter = f"""---
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    img_url = random.choice(CONFIG['UNSPLASH_POOL'])
+    horario = "00:01:00" if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False) else "12:00:00"
+
+    front_matter = f"""---
 layout: post
-title: '{title_clean}'
-date: {today_str} {horario_post} -0300
-categories: '{selected_category}'
-tags: [{selected_tags}]{image_meta}
+title: '{prefixo_titulo}'
+date: {today_str} {horario} -0300
+categories: '{category}'
+tags: [{tags}]
+image: {img_url}
+img_alt: 'Estratégia avançada de {keyword} discutida no portal {CONFIG['COMPANY_NAME']}'{extra_front_matter}
 ---
 
 """
+    final_output = front_matter + content
+    output_path = Path(CONFIG['OUTPUT_FOLDER']) / f"{today_str}-{base_slug}.md"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(final_output)
 
-    final_markdown = jekyll_front_matter + content
-    
-    output_folder = Path(CONFIG['OUTPUT_FOLDER'])
-    output_folder.mkdir(parents=True, exist_ok=True)
-    
-    file_path = output_folder / f"{today_str}-{slug}.md"
-    with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(final_markdown)
-        
-    print(f"✅ Artigo Jekyll de Alta Performance salvo em: {file_path}")
-    
-    public_post_url = f"{CONFIG['COMPANY_WEBSITE']}blog/{slug}/"
-    solicitar_indexacao_google(public_post_url)
+    print(f"✅ Post publicado com sucesso em: {output_path}")
+    solicitar_indexacao_google(f"{CONFIG['COMPANY_WEBSITE']}blog/{base_slug}/")
     return True
 
+def resolver_e_executar():
+    # Verifica a intenção do Painel de Controle
+    modo_youtube_ativo = CONFIG_TESTES.get('FORCOR_MODELO_YOUTUBE', False) or CONFIG_TESTES.get('FORCAR_MODELO_YOUTUBE', False)
+    
+    if modo_youtube_ativo:
+        print("🎬 [Modo Ativo] Buscando pautas nos Canais do YouTube...")
+        canais = sorted(list(YOUTUBE_DATABASE.keys()))
+        dia_ano = datetime.now().timetuple().tm_yday
+        
+        video_url, video_id, canal_nome = None, None, None
+        for i in range(len(canais)):
+            c_cand = canais[(dia_ano + i) % len(canais)]
+            for url in YOUTUBE_DATABASE[c_cand]:
+                v_id = extrair_video_id(url)
+                if v_id and not video_ja_processado(v_id):
+                    video_url, video_id, canal_nome = url, v_id, c_cand
+                    break
+            if video_url:
+                break
+                
+        if video_url:
+            titulo, autor = obter_metadados_youtube(video_url)
+            titulo = titulo or f"Estratégia de SEO por {canal_nome}"
+            autor = autor or canal_nome
+            transcricao = obter_transcricao(video_id)
+            
+            if transcricao:
+                embed_html = f'\n<div class="video-container" style="margin:25px 0;"><iframe src="https://www.youtube.com/embed/{video_id}" width="100%" height="450" frameborder="0" allowfullscreen></iframe></div>\n'
+                prompt_yt = f"Adapte em Português do Brasil a seguinte transcrição do vídeo de {autor} intitulado '{titulo}':\n\n{transcricao}"
+                extra_meta = f"\nyoutube_id: {video_id}"
+                
+                return executar_fluxo_comum(prompt_yt, f"{titulo} - Insights", slugify(titulo), extra_front_matter=extra_meta)
+            else:
+                print("⚠️ Falha na captura da transcrição. Transitando para o modo estático automaticamente.")
+        else:
+            print("🚨 Banco de vídeos esgotado.")
+            enviar_email_alerta()
+
+    # Fallback ou Modo Estático Padrão
+    print("📝 [Modo Ativo] Gerando artigo a partir de tópicos institucionais estáticos...")
+    topico = random.choice(CONFIG['TOPICS'])
+    return executar_fluxo_comum(f"Escreva uma análise profunda sobre o seguinte tema do mercado: {topico}", f"{topico} - Análise Especializada", slugify(topico))
+
 if __name__ == '__main__':
-    main()
+    if not CONFIG['GEMINI_API_KEY']:
+        print("❌ Erro: GEMINI_API_KEY não configurada no ambiente do GitHub.")
+        sys.exit(1)
+    resolver_e_executar()
