@@ -2,95 +2,75 @@
 import os
 import sys
 import requests
-import re
-import json
+import xml.etree.ElementTree as ET
+from googleapiclient.discovery import build
 from google import genai
 
-def obter_legenda(video_id):
-    print(f"🔤 Verificando transcrição para o ID: {video_id}...")
+def obter_legenda_oficial(video_id):
+    print(f"🔤 Chamando API Oficial do YouTube para o ID: {video_id}...")
+    youtube_key = os.getenv('YOUTUBE_API_KEY')
     
-    # Tentativa via Raspagem Direta HTTP (Mais estável para o GitHub Actions)
+    if not youtube_key:
+        print("❌ Erro: A variável YOUTUBE_API_KEY não foi configurada nos Secrets.")
+        return None
+
     try:
-        url = f"https://www.youtube.com/watch?v={video_id}"
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
-        html = requests.get(url, headers=headers, timeout=15).text
+        # Inicializa o cliente oficial do YouTube
+        youtube = build('youtube', 'v3', developerKey=youtube_key)
         
-        if "captionTracks" not in html:
-            print(f"⚠️ O YouTube não possui nenhuma legenda disponível (nem automática) para o vídeo {video_id}.")
+        # 1. Lista as legendas disponíveis para o vídeo
+        request = youtube.captions().list(part="snippet", videoId=video_id)
+        response = request.execute()
+        
+        items = response.get('items', [])
+        if not items:
+            print(f"⚠️ Nenhuma legenda oficial/rastreável encontrada para o vídeo {video_id}.")
             return None
             
-        match = re.search(r'"captionTracks":\s*(\[.*?\])', html)
-        if not match:
-            return None
-            
-        tracks = json.loads(match.group(1))
-        # Prefere português, se não houver, pega a primeira disponível (geralmente inglês)
-        url_legenda = tracks[0]["baseUrl"]
-        for track in tracks:
-            if 'langCode' in track and track['langCode'] == 'pt':
-                url_legenda = track['baseUrl']
+        # Seleciona o ID da primeira legenda disponível (prioriza português se achar)
+        caption_id = items[0]['id']
+        for item in items:
+            if item['snippet'].get('language') == 'pt':
+                caption_id = item['id']
                 break
         
-        xml_legenda = requests.get(url_legenda, headers=headers, timeout=15).text
-        linhas = re.findall(r'<text[^>]*>([\s\S]*?)</text>', xml_legenda)
+        # 2. Baixa o arquivo de legenda bruto
+        download_request = youtube.captions().download(id=caption_id, tfmt='srt')
+        legenda_bruta = download_request.execute().decode('utf-8')
         
-        import html as html_parser
-        texto_limpo = " ".join([html_parser.unescape(l) for l in linhas])
-        
-        # Remove marcações de tempo restantes ou textos vazios
-        texto_limpo = re.sub(r'<[^>]*>', '', texto_limpo).strip()
-        
-        if len(texto_limpo) > 100:
-            print(f"✅ Transcrição recuperada com sucesso ({len(texto_limpo)} caracteres).")
-            return texto_limpo
-        return None
+        # Limpa as marcações de tempo do formato SRT para deixar apenas o texto limpo
+        linhas = legenda_bruta.split('\n')
+        texto_limpo = []
+        for linha in linhas:
+            linha = linha.strip()
+            if linha.isdigit() or '-->' in linha or not linha:
+                continue
+            texto_limpo.append(linha)
+            
+        resultado = " ".join(texto_limpo)
+        print(f"✅ Transcrição obtida via API Oficial ({len(resultado)} caracteres).")
+        return resultado
+
     except Exception as e:
-        print(f"❌ Erro técnico ao raspar o YouTube: {e}")
+        print(f"⚠️ A API do YouTube retornou um erro ou restrição para este vídeo: {e}")
         return None
 
 def gerar_artigo(transcricao, video_id):
     api_key = os.getenv('GEMINI_API_KEY')
-    if not api_key:
-        print("❌ Erro: A variável de ambiente GEMINI_API_KEY não foi configurada.")
-        return False
-
     print("🤖 Conectando à API do Gemini para criar o artigo...")
     try:
         client = genai.Client(api_key=api_key)
+        prompt = f"Você é um especialista em SEO. Crie um artigo completo, longo e estruturado em Markdown com base na seguinte transcrição de vídeo. Use subtítulos H2 e H3, parágrafos curtos e inclua uma seção de FAQ no final. Não inclua delimitadores Front Matter (como ---).\n\nTranscrição:\n{transcricao}"
         
-        prompt = f"""Você é um especialista em SEO. Crie um artigo completo, longo e estruturado em Markdown com base na seguinte transcrição de vídeo. Use subtítulos H2 e H3, parágrafos curtos e inclua uma seção de FAQ no final. Não inclua delimitadores Front Matter (como ---).
-
-Transcrição:
-{transcricao}"""
-
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt
-        )
+        response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+        conteudo = response.text.strip()
         
-        conteúdo = response.text.strip()
-        
-        front_matter = f"""---
-layout: post
-title: 'Insights de SEO Avançado - Vídeo {video_id}'
-date: 2026-07-03 12:00:00 -0300
-categories: 'Análises'
-tags: [seo, marketing-digital]
-youtube_id: {video_id}
----
-
-<div class="youtube-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin: 35px 0; border-radius: 8px;">
-  <iframe src="https://www.youtube.com/embed/{video_id}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
-</div>
-
-"""
-        markdown_final = front_matter + conteúdo
+        front_matter = f"---\nlayout: post\ntitle: 'Insights de SEO Avançado - Vídeo {video_id}'\ndate: 2026-07-03 12:00:00 -0300\ncategories: 'Análises'\ntags: [seo, marketing-digital]\nyoutube_id: {video_id}\n---\n\n"
         
         os.makedirs('_posts', exist_ok=True)
         caminho_arquivo = f"_posts/2026-07-03-analise-seo-{video_id}.md"
-        
         with open(caminho_arquivo, 'w', encoding='utf-8') as f:
-            f.write(markdown_final)
+            f.write(front_matter + conteudo)
             
         print(f"🎉 SUCESSO! Artigo gerado e salvo em: {caminho_arquivo}")
         return True
@@ -99,26 +79,22 @@ youtube_id: {video_id}
         return False
 
 if __name__ == '__main__':
-    # Lista de vídeos para teste. O primeiro (do RankMath) não tem legenda. 
-    # O segundo (do Neil Patel) tem legenda e vai funcionar perfeitamente!
-    VIDEOS_TESTE = ["VBRgIcXIxB0", "k8aFgaUTe_I"]
+    # IDs de canais grandes que sempre deixam legendas oficiais ativas
+    VIDEOS_TESTE = ["WQHJcSiTc7s", "VBRgIcXIxB0"]
     
     texto_legenda = None
     video_id_sucesso = None
     
     for v_id in VIDEOS_TESTE:
-        texto_legenda = obter_legenda(v_id)
+        texto_legenda = obter_legenda_oficial(v_id)
         if texto_legenda:
             video_id_sucesso = v_id
             break
-        print(f"⏭️ Pulando vídeo {v_id} e tentando o próximo da fila...")
         print("-" * 40)
 
     if texto_legenda and video_id_sucesso:
-        sucesso = gerar_artigo(texto_legenda, video_id_sucesso)
-        if not sucesso:
+        if not gerar_artigo(texto_legenda, video_id_sucesso):
             sys.exit(1)
     else:
-        print("🛑 [Proteção de Créditos]: Nenhum dos vídeos da fila possui legendas disponíveis. Processo encerrado sem gastar tokens.")
-        # Sai com 0 para o GitHub Actions não marcar como "falha de sistema", já que foi apenas uma escolha de negócio
+        print("🛑 [Proteção de Créditos]: Nenhuma legenda oficial pôde ser extraída. Processo encerrado de forma segura.")
         sys.exit(0)
