@@ -375,3 +375,4 @@ if __name__ == '__main__':
     if not sucesso:
         # Retorna código 1 para o orchestrator saber que precisa rodar o fallback estático
         sys.exit(1)
+        
