@@ -8,10 +8,9 @@ import json
 from datetime import datetime
 from pathlib import Path
 from google import genai
-# Nova biblioteca para autenticação automática com a API do Google
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
-# Tenta ler o painel de testes se ele existir na pasta
+
 try:
     from config_testes import CONFIG_TESTES
 except ImportError:
@@ -19,7 +18,6 @@ except ImportError:
 
 CONFIG = {
     'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY', ''),
-    # Guarde o conteúdo do JSON da sua Conta de Serviço do Google Cloud nesta variável de ambiente
     'GOOGLE_SERVICE_ACCOUNT_JSON': os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON', ''),
     'COMPANY_NAME': os.getenv('COMPANY_NAME', 'Masters SEO'),
     'COMPANY_WEBSITE': os.getenv('COMPANY_WEBSITE', 'https://masters-seo.github.io/'),
@@ -40,7 +38,7 @@ CONFIG = {
         'O panorama do mercado de SEO técnico no Brasil'
     ],
     'KEYWORDS': [
-        'experts de seo', 'melhores profissionais de seo', 'analise de seo', 
+        'experts de seo', 'melhores professionals de seo', 'analise de seo', 
         'consultor de seo', 'curso de seo avaliacao', 'otimizacao para IA'
     ],
     'UNSPLASH_POOL': [
@@ -175,8 +173,10 @@ def gerar_imagem_com_texto(titulo, slug):
         print(f"⚠️ Erro ao gerar imagem customizada: {e}")
         return CONFIG['URL_IMAGEM_PADRAO']
 
-# Nova função injetada para automatizar o pedido de rastreio no Google Search
 def solicitar_indexacao_google(target_url):
+    if CONFIG_TESTES.get('DESATIVAR_INDEXING_API', False):
+        print("🟡 Notificação de indexação pausada pelo painel de controle (CONFIG_TESTES).")
+        return False
     if not CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON']:
         print("⚠️ Notificação de indexação ignorada: GOOGLE_SERVICE_ACCOUNT_JSON não configurada.")
         return False
@@ -184,8 +184,6 @@ def solicitar_indexacao_google(target_url):
         info = json.loads(CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON'])
         scopes = ['https://www.googleapis.com/auth/indexing']
         credentials = service_account.Credentials.from_service_account_info(info, scopes=scopes)
-        
-        # Autentica e gera o Token de Acesso temporário
         credentials.refresh(Request())
         token = credentials.token
         
@@ -201,13 +199,13 @@ def solicitar_indexacao_google(target_url):
         
         response = requests.post(endpoint, json=body, headers=headers)
         if response.status_code == 200:
-            print(f"🚀 Sucesso! Google Search notificado instantaneamente para indexar: {target_url}")
+            print(f"🚀 Sucesso! Google Search Console notificado: {target_url}")
             return True
         else:
-            print(f"❌ Falha ao notificar o Google. Status: {response.status_code} - {response.text}")
+            print(f"❌ Falha ao notificar o Google. Status: {response.status_code}")
             return False
     except Exception as e:
-        print(f"⚠️ Erro ao executar a Indexing API do Google: {e}")
+        print(f"⚠️ Erro ao executar a Indexing API: {e}")
         return False
 
 def main():
@@ -218,7 +216,6 @@ def main():
     topic = random.choice(CONFIG['TOPICS'])
     keyword = random.choice(CONFIG['KEYWORDS'])
     contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
-    
     secondary_img_url = random.choice(CONFIG['UNSPLASH_POOL'])
     
     client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
@@ -263,7 +260,6 @@ def main():
         img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
         image_meta = f"\nimage: {img_url}\nimg_alt: '{alt_text_clean}'"
     
-# Verificação dinâmica do horário com base no painel de controle
     if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False):
         horario_post = "00:01:00"
     else:
@@ -279,7 +275,6 @@ tags: [{selected_tags}]{image_meta}
 
 """
 
-"""
     final_markdown = jekyll_front_matter + content
     
     output_folder = Path(CONFIG['OUTPUT_FOLDER'])
@@ -289,14 +284,10 @@ tags: [{selected_tags}]{image_meta}
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(final_markdown)
         
-    print(f"✅ Artigo Jekyll de Alta Performance salvo com sucesso em: {file_path}")
+    print(f"✅ Artigo Jekyll de Alta Performance salvo em: {file_path}")
     
-    # Executa a Indexação Automática enviando a URL pública gerada para o Google
-    # Nota: A rota padrão estruturada pelo Jekyll costuma ser o domínio + /categoria/ano/mes/dia/slug.html ou /ano/mes/dia/slug/
-    # Ajuste a montagem abaixo se a estrutura de permalinks do seu site for diferente
     public_post_url = f"{CONFIG['COMPANY_WEBSITE']}blog/{slug}/"
     solicitar_indexacao_google(public_post_url)
-    
     return True
 
 if __name__ == '__main__':
