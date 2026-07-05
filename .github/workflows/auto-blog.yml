@@ -1,95 +1,45 @@
-name: 🚀 Auto Blog Generator - YouTube
+name: 🚀 Auto Blog Generator
 
 on:
-  # Executa automaticamente todos os dias às 9:00 AM UTC (5:00 AM BRT)
   schedule:
-    - cron: '0 9 * * *'
-  
-  # Permite execução manual
-  workflow_dispatch:
-    inputs:
-      force_run:
-        description: 'Forçar execução mesmo sem vídeos pendentes'
-        required: false
-        default: 'false'
+    - cron: '0 9 * * *' # Roda todos os dias às 09:00 UTC
+  workflow_dispatch: # Permite execução manual
 
 jobs:
   generate-article:
     runs-on: ubuntu-latest
     
-    # Permissões necessárias para fazer git push
-    permissions:
-      contents: write
-      actions: read
-
     steps:
-      # 1. Clonar repositório
-      - name: 📥 Checkout do repositório
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      # 2. Configurar Python
-      - name: 🐍 Setup Python 3.11
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-          cache: 'pip'
-
-      # 3. Criar pastas necessárias
-      - name: 📁 Criar pastas
-        run: |
-          mkdir -p .github/scripts
-          mkdir -p _posts
-          mkdir -p assets/img/posts
-
-      # 4. Instalar dependências
-      - name: 📦 Instalar dependências
+      
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install google-generativeai requests youtube-transcript-api -q
-
-      # 5. Executar gerador de artigos
-      - name: 🤖 Gerar artigo YouTube
+          pip install google-genai requests pillow youtube-transcript-api google-auth
+      
+      - name: Generate article
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           COMPANY_NAME: "Masters SEO"
           COMPANY_WEBSITE: "https://masters-seo.github.io/"
+          COMPANY_LOCATION: "Brasil"
+          COMPANY_DESC: "Hub de análises independentes sobre os Experts do mercado de SEO"
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
         run: |
           python .github/scripts/orchestrator.py
-
-      # 6. Configurar Git
-      - name: ⚙️ Configurar Git
+      
+      - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Actions"
-
-      # 7. Commit e Push
-      - name: 🔄 Commit e Push
-        run: |
-          # Verificar se há mudanças em _posts/
-          if [ -n "$(git status _posts/ --porcelain)" ]; then
-            echo "📝 Novos artigos detectados!"
-            git add _posts/ || true
-            git commit -m "🤖 Auto: Novo artigo gerado $(date +'%Y-%m-%d')"
-            git push
-            echo "✅ Artigo enviado com sucesso!"
-          else
-            echo "ℹ️ Nenhum artigo novo para enviá-lo."
-          fi
-
-      # 8. Resumo da execução
-      - name: ✅ Resumo
-        if: always()
-        run: |
-          echo "╔════════════════════════════════════════╗"
-          echo "║   Auto Blog Generator - Execução Concluída"
-          echo "╚════════════════════════════════════════╝"
-          echo ""
-          echo "⏱️  Data/Hora: $(date)"
-          echo "🎯 Status: ${{ job.status }}"
-          echo ""
-          if [ -d "_posts" ]; then
-            echo "📊 Artigos em _posts/:"
-            ls -1 _posts/ | head -5 || echo "   (nenhum)"
-          fi
+          git config --local user.name "GitHub Action"
+          git add _posts/*.md || true
+          git add assets/img/posts/*.jpg || true
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Add auto-generated article and assets $(date +'%Y-%m-%d')" && git push)
