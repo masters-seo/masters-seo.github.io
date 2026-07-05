@@ -1,30 +1,51 @@
 #!/usr/bin/env python3
 import os
+import sys
 import random
 import re
 import unicodedata
 import requests
+import json
+import smtplib
+from email.mime.text import MIMEText
 from datetime import datetime
 from pathlib import Path
 from google import genai
+from google.oauth2 import service_account
+from google.auth.transport.requests import Request
+
+# Força instalação/importação da biblioteca do YouTube se necessário
+try:
+    from youtube_transcript_api import YouTubeTranscriptApi
+except ImportError:
+    import subprocess
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "youtube-transcript-api"])
+    from youtube_transcript_api import YouTubeTranscriptApi
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if script_dir not in sys.path:
+    sys.path.insert(0, script_dir)
+
+try:
+    from config_testes import CONFIG_TESTES
+except ImportError:
+    CONFIG_TESTES = {}
+
+RAIZ_PROJETO = Path(script_dir).parents[1]
 
 CONFIG = {
     'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY', ''),
+    'GOOGLE_SERVICE_ACCOUNT_JSON': os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON', ''),
     'COMPANY_NAME': os.getenv('COMPANY_NAME', 'Masters SEO'),
     'COMPANY_WEBSITE': os.getenv('COMPANY_WEBSITE', 'https://masters-seo.github.io/'),
-    'OUTPUT_FOLDER': '_posts',
-    
-    # -------------------------------------------------------------------------
-    # 🎛️ SEU PAINEL DE CONTROLE DE IMAGENS:
-    # Mude para uma das 3 palavras abaixo para alternar o modo do seu blog:
-    # 'nenhuma'          -> Modo 1: Artigo sem imagem de destaque
-    # 'unsplash'         -> Modo 2: Imagem aleatória de banco de dados
-    # 'personalizada'    -> Modo 3: Sua imagem padrão + Título com faixa preta
-    # -------------------------------------------------------------------------
+    'OUTPUT_FOLDER': RAIZ_PROJETO / '_posts',
     'MODO_IMAGEM': 'unsplash', 
-    
-    # URL da sua imagem padrão de fundo para o Modo 3 (Pode alterar para qualquer link)
     'URL_IMAGEM_PADRAO': 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&auto=format&fit=crop&q=80',
+    'EMAIL_NOTIFICACAO': 'mayconmatosdigital@gmail.com',
+    'SMTP_SERVER': os.getenv('SMTP_SERVER', 'smtp.gmail.com'),
+    'SMTP_PORT': int(os.getenv('SMTP_PORT', '587')),
+    'SMTP_USER': os.getenv('SMTP_USER', ''), 
+    'SMTP_PASSWORD': os.getenv('SMTP_PASSWORD', ''), 
     
     'TOPICS': [
         'Quem são os maiores nomes de SEO Local no Brasil',
@@ -33,7 +54,7 @@ CONFIG = {
         'O que os grandes experts dizem sobre a Otimização para IA',
         'Auditoria de SEO: Critérios usados pelos profissionais',
         'Estratégias de Link Building que os experts recomendam',
-        'Análise independente: O impacto das atualizações do Google',
+        'Análise independente: O impacto das updates do Google',
         'Como escolher uma consultoria de SEO confiável',
         'Métricas que realmente importam segundo os maiores nomes de SEO',
         'O panorama do mercado de SEO técnico no Brasil'
@@ -48,159 +69,243 @@ CONFIG = {
         'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=60',
         'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=60',
         'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'
+    ],
+    'MAYCON_LINKS': [
+        'https://mayconmatos.com.br/',
+        'https://mayconmatos.com.br/recursos/diagnostico-presenca-digital/',
+        'https://mayconmatos.com.br/pagespeed-insights-vs-maycon-matos-seo/',
+        'https://mayconmatos.com.br/servicos/consultoria/',
+        'https://mayconmatos.com.br/servicos/seo-local/',
+        'https://mayconmatos.com.br/consultor-de-seo-para-google-e-ia/'
     ]
 }
 
-def build_prompt(topic, keyword):
-    return f"""Você é um Copywriter Sênior de Resposta Direta e Analista Principal do {CONFIG['COMPANY_NAME']}.
-Crie um artigo de autoridade profunda, altamente persuasivo, claro e totalmente otimizado para SEO semântico.
+YOUTUBE_DATABASE = {
+    "neilpatel": [
+        "https://youtu.be/H7m6myWuwII",
+        "https://www.youtube.com/watch?v=k8aFgaUTe_I",
+        "https://www.youtube.com/watch?v=WQHJcSiTc7s"
+    ],
+    "@RankMath": [
+        "https://www.youtube.com/watch?v=VBRgIcXIxB0",
+        "https://www.youtube.com/watch?v=T1iqDNgkxeI"
+    ],
+    "@AhrefsCom": [
+        "https://www.youtube.com/watch?v=Sk8MAbD39Qw",
+        "https://www.youtube.com/watch?v=uza9GX0E2mw"
+    ]
+}
 
-TÓPICO: {topic}
-PALAVRA-CHAVE PRINCIPAL: {keyword}
-
-DIRETRIZES OBRIGATÓRIAS DE ESCRITA (Framework Copywriting Avançado):
-1. ESCANEABILIDADE MÁXIMA: Escreva o artigo utilizando parágrafos muito curtos. Cada parágrafo deve conter no MÁXIMO 2 a 3 linhas. Quebre o texto constantemente para garantir uma leitura fluida no ambiente mobile.
-2. TOM EDITORIAL: Premium, analítico e imparcial. Elimine adjetivos vazios ou clichês comerciais espalhafatosos ("revolucionário", "incrível", "mágico").
-3. ESTRUTURA REQUERIDA:
-   - Inicie o texto diretamente no conteúdo através de uma introdução marcante.
-   - Divida o conteúdo por meio de intertítulos estruturados in H2 e H3 baseados em benefícios reais.
-   - Enriqueça a leitura utilizando tabelas comparativas, listas com marcadores (bullet points) ou analogias práticas sempre que fizer sentido para explicar o tópico de forma simples.
-   - Desenvolva uma conclusão amarrando os dados apresentados, seguida de uma chamada para ação (CTA) sutil direcionando o leitor a explorar as demais análises no portal {CONFIG['COMPANY_WEBSITE']}.
-   - Apresente uma seção robusta de FAQ contendo entre 5 e 7 dúvidas reais e frequentes sobre o tema, com respostas diretas e curtas.
-   - Ao final completo do texto, insira uma sugestão técnica de marcação de dados estruturados Schema JSON-LD dentro de uma seção comentada em código HTML ().
-
-IMPORTANTE: Devolva exclusivamente o código estruturado em Markdown do artigo. Não inclua os blocos delimitadores de metadados Front Matter (---) no início da sua resposta, pois eles já são gerenciados dinamicamente pelo sistema."""
+def raspar_links_internos_reais():
+    """Busca posts válidos diretamente nos arquivos locais do repositório para evitar links quebrados"""
+    links_fallback = ["/blog/como-melhorar-nota-pagespeed/", "/blog/advocacia/como-captar-clientes-na-advocacia/"]
+    try:
+        folder = Path(CONFIG['OUTPUT_FOLDER'])
+        if not folder.exists():
+            return links_fallback
+        
+        links_fatiados = []
+        for post in folder.glob("*.md"):
+            name = post.name
+            # Padrão Jekyll: YYYY-MM-DD-slug.md -> extrai apenas o slug
+            match = re.match(r"^\d{{4}}-\d{{2}}-\d{{2}}-(.+)\.md$", name)
+            if match:
+                slug_real = match.group(1)
+                links_fatiados.append(f"/blog/{slug_real}/")
+        
+        return links_fatiados if len(links_fatiados) >= 2 else links_fallback
+    except Exception as e:
+        print(f"⚠️ Falha ao ler posts locais: {e}")
+        return links_fallback
 
 def slugify(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8').lower()
     text = re.sub(r'[^a-z0-9\s-]', '', text)
     return re.sub(r'[\s-]+', '-', text).strip('-')
 
-def gerar_imagem_com_texto(titulo, slug):
+def enviar_email_alerta():
+    if not CONFIG['SMTP_USER'] or not CONFIG['SMTP_PASSWORD']:
+        return
     try:
-        from PIL import Image, ImageDraw, ImageFont
-    except ImportError:
-        print("⚠️ Biblioteca 'Pillow' não instalada. Usando fallback da imagem padrão.")
-        return CONFIG['URL_IMAGEM_PADRAO']
-
-    try:
-        img_data = requests.get(CONFIG['URL_IMAGEM_PADRAO']).content
-        img_path = Path("temp_base.jpg")
-        with open(img_path, 'wb') as f:
-            f.write(img_data)
-        
-        img = Image.open(img_path).convert("RGBA")
-        W, H = img.size
-        
-        overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
-        draw = ImageDraw.Draw(overlay)
-        
-        faixa_altura = int(H * 0.25)
-        y0 = (H - faixa_altura) // 2
-        y1 = y0 + faixa_altura
-        
-        draw.rectangle(((0, y0), (W, y1)), fill=(0, 0, 0, 128))
-        
-        try:
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", int(faixa_altura * 0.28))
-        except IOError:
-            font = ImageFont.load_default()
-            
-        palavras = titulo.split()
-        linhas = []
-        linha_atual = ""
-        for palavra in palavras:
-            test_linha = f"{linha_atual} {palavra}".strip()
-            if len(test_linha) * (faixa_altura * 0.18) < W - 60:
-                linha_atual = test_linha
-            else:
-                linhas.append(linha_atual)
-                linha_atual = palavra
-        linhas.append(linha_atual)
-        
-        draw_txt = ImageDraw.Draw(overlay)
-        total_texto_h = len(linhas) * int(faixa_altura * 0.35)
-        current_y = y0 + (faixa_altura - total_texto_h) // 2
-        
-        for linha in linhas:
-            draw_txt.text((W // 2, current_y), linha, fill=(255, 255, 255, 255), font=font, anchor="mm")
-            current_y += int(faixa_altura * 0.35)
-            
-        img_final = Image.alpha_composite(img, overlay).convert("RGB")
-        
-        assets_folder = Path("assets/img/posts")
-        assets_folder.mkdir(parents=True, exist_ok=True)
-        
-        final_img_path = assets_folder / f"{slug}.jpg"
-        img_final.save(final_img_path, "JPEG")
-        
-        if img_path.exists():
-            img_path.unlink()
-            
-        return f"/{final_img_path}"
+        msg = MIMEText("Banco de vídeos do YouTube esgotado. Transicionando automação para modo estático.")
+        msg['Subject'] = '🚨 Alerta: YouTube Database Esgotada'
+        msg['From'] = CONFIG['SMTP_USER']
+        msg['To'] = CONFIG['EMAIL_NOTIFICACAO']
+        with smtplib.SMTP(CONFIG['SMTP_SERVER'], CONFIG['SMTP_PORT']) as server:
+            server.starttls()
+            server.login(CONFIG['SMTP_USER'], CONFIG['SMTP_PASSWORD'])
+            server.send_message(msg)
     except Exception as e:
-        print(f"⚠️ Erro ao gerar imagem customizada: {e}. Usando fallback.")
-        return CONFIG['URL_IMAGEM_PADRAO']
+        print(f"⚠️ Erro Email: {e}")
 
-def main():
-    if not CONFIG['GEMINI_API_KEY']:
-        print("❌ GEMINI_API_KEY ausente.")
+def extrair_video_id(url):
+    match = re.search(r"(?:v=|\/)([a-zA-Z0-9_-]{11})", url)
+    return match.group(1) if match else None
+
+def video_ja_processado(video_id):
+    folder = Path(CONFIG['OUTPUT_FOLDER'])
+    if not folder.exists():
         return False
-        
-    topic = random.choice(CONFIG['TOPICS'])
-    keyword = random.choice(CONFIG['KEYWORDS'])
-    
+    for post in folder.glob("*.md"):
+        try:
+            if f"youtube_id: {video_id}" in post.read_text(encoding='utf-8'):
+                return True
+        except:
+            continue
+    return False
+
+def obter_metadados_youtube(url):
+    try:
+        res = requests.get(f"https://www.youtube.com/oembed?url={url}&format=json", timeout=10)
+        if res.status_code == 200:
+            d = res.json()
+            return d.get('title'), d.get('author_name')
+    except:
+        pass
+    return None, None
+
+def obter_transcricao(video_id):
+    try:
+        lista = YouTubeTranscriptApi.get_transcript(video_id, languages=['pt', 'en'])
+        return " ".join([item['text'] for item in lista])
+    except:
+        return None
+
+def solicitar_indexacao_google(target_url):
+    if CONFIG_TESTES.get('DESATIVAR_INDEXING_API', False) or not CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON']:
+        return False
+    try:
+        info = json.loads(CONFIG['GOOGLE_SERVICE_ACCOUNT_JSON'])
+        scopes = ['https://www.googleapis.com/auth/indexing']
+        credentials = service_account.Credentials.from_service_account_info(info, scopes=scopes)
+        credentials.refresh(Request())
+        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {credentials.token}"}
+        body = {"url": target_url, "type": "URL_UPDATED"}
+        requests.post("https://indexing.googleapis.com/v3/urlNotifications:publish", json=body, headers=headers)
+    except Exception as e:
+        print(f"⚠️ Indexing API Erro: {e}")
+
+def executar_fluxo_comum(prompt_adicional, prefixo_titulo, base_slug, extra_front_matter=""):
     client = genai.Client(api_key=CONFIG['GEMINI_API_KEY'])
-    print(f"Gerando artigo sobre: {topic}")
+    keyword = random.choice(CONFIG['KEYWORDS'])
+    contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
+    secondary_img_url = random.choice(CONFIG['UNSPLASH_POOL'])
     
-    response = client.models.generate_content(
-        model='gemini-2.5-flash',
-        contents=build_prompt(topic, keyword),
-    )
-    
+    links_reais = raspar_links_internos_reais()
+    link_int1 = random.choice(links_reais)
+    link_int2 = random.choice([l for l in links_reais if l != link_int1] or links_reais)
+
+    prompt_master = f"""Você é o Copywriter Principal do {CONFIG['COMPANY_NAME']}.
+Escreva um artigo de autoridade absoluta seguindo estas regras de formatação rígidas:
+
+1. ESCANEABILIDADE: Parágrafos extremamente curtos, de no máximo 2 a 3 linhas. Quebre o texto com frequência.
+2. CITAÇÃO DESTACADA: Insira exatamente este bloco de código HTML modificado com uma frase de impacto no primeiro terço:
+<blockquote style="font-size: 2.2rem; line-height: 1.2; color: #111; font-weight: 800; border-left: 6px solid #000; padding-left: 15px; margin: 30px 0;">"Sua frase de efeito marcante aqui"</blockquote>
+3. IMAGEM INTERMEÁRIA: Insira exatamente no meio do desenvolvimento: ![Estratégias de {keyword}]({secondary_img_url})
+4. REGRAS INVIOLÁVEIS DE LINKAGEM (DoFollow):
+   - Inclua de forma natural exatamente 1 link para o especialista Maycon Matos usando a URL exata: {contextual_link}
+   - Inclua obrigatoriamente links internos usando EXATAMENTE as duas URLs abaixo estruturadas em Markdown. Não invente caminhos e não mude os slugs:
+     * Link 1: `[Texto Ancora Contextual]({link_int1})`
+     * Link 2: `[Texto Ancora Contextual]({link_int2})`
+   - Adicione 2 links para fontes externas internacionais confiáveis (como Search Engine Land ou Backlinko).
+5. ESTRUTURA REQUERIDA: Introdução, Seção "⚡ Resumo Rápido" em marcadores, Desenvolvimento com H2/H3 e Tabelas, Conclusão com CTA sutil, FAQ (5 a 7 itens), e Schema JSON-LD dentro de um comentário HTML `<!-- -->` ao fim.
+
+Configurações do conteúdo base:
+{prompt_adicional}
+
+Escreva as duas tags de controle nas primeiras linhas da resposta de forma crua:
+CATEGORIA_SELECIONADA: [Defina entre Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA]
+TAGS_SELECIONADAS: [3 tags separadas por virgula]
+
+Escreva diretamente o corpo do texto em markdown. Não inclua os blocos separadores (---) do Jekyll Front Matter."""
+
+    response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt_master)
     content = response.text.strip()
+    
     if not content or len(content) < 300:
+        print("❌ Resposta inválida da inteligência artificial.")
         return False
-        
-    title_clean = f"{topic} - Análise Especializada"
-    slug = slugify(topic)
+
+    cat_match = re.search(r"CATEGORIA_SELECIONADA:\s*(.+)", content)
+    tags_match = re.search(r"TAGS_SELECIONADAS:\s*(.+)", content)
+    category = cat_match.group(1).strip() if cat_match else "Análises"
+    tags = tags_match.group(1).strip() if tags_match else "seo, otimizacao"
+    
+    content = re.sub(r"CATEGORIA_SELECIONADA:.*\n?", "", content)
+    content = re.sub(r"TAGS_SELECIONADAS:.*\n?", "", content)
+    content = content.strip()
+
     today_str = datetime.now().strftime('%Y-%m-%d')
-    
-    # Geração do Alt Text amigável utilizando a palavra-chave ativa
-    alt_text_clean = f"Análise editorial focada em {keyword} abordando {topic} - Portal {CONFIG['COMPANY_NAME']}"
-    
-    modo = CONFIG['MODO_IMAGEM'].lower()
-    image_meta = ""
-    
-    if modo == 'unsplash':
-        img_url = random.choice(CONFIG['UNSPLASH_POOL'])
-        image_meta = f"""\nimage:
-  path: {img_url}
-  alt: "{alt_text_clean}\""""
-    elif modo == 'personalizada':
-        img_url = gerar_imagem_com_texto(title_clean, f"{today_str}-{slug}")
-        image_meta = f"""\nimage:
-  path: {img_url}
-  alt: "{alt_text_clean}\""""
-    
-    jekyll_front_matter = f"""---
+    img_url = random.choice(CONFIG['UNSPLASH_POOL'])
+    horario = "00:01:00" if CONFIG_TESTES.get('FORCAR_PUBLICACAO_IMEDIATA', False) else "12:00:00"
+
+    front_matter = f"""---
 layout: post
-title: "{title_clean}"
-date: {today_str} 12:00:00 -0300{image_meta}
+title: '{prefixo_titulo}'
+date: {today_str} {horario} -0300
+categories: '{category}'
+tags: [{tags}]
+image: {img_url}
+img_alt: 'Estratégia avançada de {keyword} discutida no portal {CONFIG['COMPANY_NAME']}'{extra_front_matter}
 ---
 
 """
-    final_markdown = jekyll_front_matter + content
+    final_output = front_matter + content
+    output_path = Path(CONFIG['OUTPUT_FOLDER']) / f"{today_str}-{base_slug}.md"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     
-    output_folder = Path(CONFIG['OUTPUT_FOLDER'])
-    output_folder.mkdir(parents=True, exist_ok=True)
-    
-    file_path = output_folder / f"{today_str}-{slug}.md"
-    with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(final_markdown)
-        
-    print(f"✅ Artigo Jekyll salvo com sucesso em: {file_path}")
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(final_output)
+
+    print(f"✅ Post publicado com sucesso em: {output_path}")
+    solicitar_indexacao_google(f"{CONFIG['COMPANY_WEBSITE']}blog/{base_slug}/")
     return True
 
+def resolver_e_executar():
+    # Verifica a intenção do Painel de Controle
+    modo_youtube_ativo = CONFIG_TESTES.get('FORCOR_MODELO_YOUTUBE', False) or CONFIG_TESTES.get('FORCAR_MODELO_YOUTUBE', False)
+    
+    if modo_youtube_ativo:
+        print("🎬 [Modo Ativo] Buscando pautas nos Canais do YouTube...")
+        canais = sorted(list(YOUTUBE_DATABASE.keys()))
+        dia_ano = datetime.now().timetuple().tm_yday
+        
+        video_url, video_id, canal_nome = None, None, None
+        for i in range(len(canais)):
+            c_cand = canais[(dia_ano + i) % len(canais)]
+            for url in YOUTUBE_DATABASE[c_cand]:
+                v_id = extrair_video_id(url)
+                if v_id and not video_ja_processado(v_id):
+                    video_url, video_id, canal_nome = url, v_id, c_cand
+                    break
+            if video_url:
+                break
+                
+        if video_url:
+            titulo, autor = obter_metadados_youtube(video_url)
+            titulo = titulo or f"Estratégia de SEO por {canal_nome}"
+            autor = autor or canal_nome
+            transcricao = obter_transcricao(video_id)
+            
+            if transcricao:
+                embed_html = f'\n<div class="video-container" style="margin:25px 0;"><iframe src="https://www.youtube.com/embed/{video_id}" width="100%" height="450" frameborder="0" allowfullscreen></iframe></div>\n'
+                prompt_yt = f"Adapte em Português do Brasil a seguinte transcrição do vídeo de {autor} intitulado '{titulo}':\n\n{transcricao}"
+                extra_meta = f"\nyoutube_id: {video_id}"
+                
+                return executar_fluxo_comum(prompt_yt, f"{titulo} - Insights", slugify(titulo), extra_front_matter=extra_meta)
+            else:
+                print("⚠️ Falha na captura da transcrição. Transitando para o modo estático automaticamente.")
+        else:
+            print("🚨 Banco de vídeos esgotado.")
+            enviar_email_alerta()
+
+    # Fallback ou Modo Estático Padrão
+    print("📝 [Modo Ativo] Gerando artigo a partir de tópicos institucionais estáticos...")
+    topico = random.choice(CONFIG['TOPICS'])
+    return executar_fluxo_comum(f"Escreva uma análise profunda sobre o seguinte tema do mercado: {topico}", f"{topico} - Análise Especializada", slugify(topico))
+
 if __name__ == '__main__':
-    main()
+    if not CONFIG['GEMINI_API_KEY']:
+        print("❌ Erro: GEMINI_API_KEY não configurada no ambiente do GitHub.")
+        sys.exit(1)
+    resolver_e_executar()
