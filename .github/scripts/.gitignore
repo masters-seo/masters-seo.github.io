@@ -1,7 +1,0 @@
-_posts/*
-!_posts/.gitkeep
-.env
-*.pyc
-__pycache__/
-venv/
-*.log
