@@ -2,7 +2,7 @@ name: 🚀 Auto Blog Generator
 
 on:
   schedule:
-    - cron: '0 9 * * *' # Roda todos os dias às 09:00 UTC
+    - cron: '0 12 * * *' # 12:00 UTC = 09:00 no Brasil
   workflow_dispatch: # Permite execução manual
 
 jobs:
@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }} # OBRIGATÓRIO: Permite que o site seja reconstruído
       
       - name: Set up Python
         uses: actions/setup-python@v5
