@@ -2,8 +2,8 @@ name: 🚀 Auto Blog Generator
 
 on:
   schedule:
-    - cron: '0 19 * * *' # Mantido no horário de teste que você configurou (16:00 BRT)
-  workflow_dispatch: # Permite execução manual
+    - cron: '0 19 * * *' 
+  workflow_dispatch: 
 
 jobs:
   generate-article:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_PAT }} # Mantém a permissão para disparar o Deploy automático
+          token: ${{ secrets.GH_PAT }}
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -41,7 +41,6 @@ jobs:
           git config --local user.name "GitHub Action"
           git add _posts/*.md || true
           
-          # Verifica se houve alteração real (novo artigo criado)
           if git diff --quiet && git diff --staged --quiet; then
             echo "CHANGED=false" >> $GITHUB_ENV
             echo "Nenhum artigo novo foi gerado hoje."
@@ -52,9 +51,8 @@ jobs:
             echo "Novo artigo commitado e enviado para o ar!"
           fi
 
-      # ✉️ ENVIAR NOTIFICAÇÃO POR E-MAIL (Apenas se um artigo novo foi publicado com sucesso)
       - name: Send Email Notification
-        if: env:CHANGED == 'true'
+        if: ${{ env.CHANGED == 'true' }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
