@@ -126,28 +126,43 @@ def executar_geracao():
         return False
 
     keyword = random.choice(CONFIG['KEYWORDS'])
-    contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
     secondary_img_url = random.choice(CONFIG['UNSPLASH_POOL'])
     
     links_reais = raspar_links_internos_reais()
     link_int1 = random.choice(links_reais)
     link_int2 = random.choice([l for l in links_reais if l != link_int1] or links_reais)
 
-    prompt_master = f"""Você é o Copywriter Principal do {CONFIG['COMPANY_NAME']}.
-Escreva um artigo de autoridade absoluta analisando profundamente o seguinte tema do mercado: "{topico}".
+    # 🛡️ SISTEMA ANTISPAM: Sorteio de 20% de probabilidade para o link externo do Maycon
+    chance = random.randint(1, 100)
+    if chance <= 20:
+        contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
+        regra_link_maycon = f"- 1 link contextual natural para o especialista Maycon Matos usando: {contextual_link}"
+        print("🎲 Sorteio: Link do Maycon INCLUÍDO hoje (20% de chance).")
+    else:
+        regra_link_maycon = "- NÃO inclua nenhum link contextual para o domínio do Maycon Matos hoje no meio do texto."
+        print("🎲 Sorteio: Link do Maycon IGNORADO hoje por segurança de SEO (80% de chance).")
+
+    prompt_master = f"""Atue como um redator especialista em SEO técnico com 15 anos de experiência no mercado brasileiro. Escreva um texto de autoridade absoluta sobre o tema: "{topico}".
+
+DIRETRIZES DE ESCRITA PARA EVITAR DETECÇÃO DE IA E GARANTIR FLUIDEZ:
+- Parágrafos Fluidos: Escreva com leitura contínua e natural. Conecte ideias logicamente usando conectivos variados (ex: 'além disso', 'contudo', 'portanto') para guiar o leitor sem pausas abruptas.
+- Ritmo de Leitura: Alterne conscientemente entre frases curtas (impactantes) e frases mais longas e explicativas. Isso cria um ritmo de leitura natural e evita a monotonia.
+- Coesão: Mantenha o foco de cada parágrafo em um único tópico central, evitando desvios de tema ou repetições excessivas de palavras-chave.
+- Voz Autêntica: Evite clichês de IA (ex: 'metamorfose', 'cenário em constante evolução', 'fever pitch', 'revolucionar'). Escreva como um especialista falando com um colega em uma reunião. Use analogias do dia a dia e um tom profissional, porém coloquial.
+- O que NÃO fazer: Não use listas numeradas excessivamente. Prefira o formato de texto corrido. Não tente ser 'perfeito' demais; o texto deve soar como se tivesse sido escrito por uma pessoa real, com opiniões e experiências próprias.
 
 REGRAS DE FORMATAÇÃO E ESTRUTURA RÍGIDAS:
-1. ESCANEABILIDADE: Parágrafos extremamente curtos, no máximo 2 a 3 linhas. Quebre o texto frequentemente.
-2. CITAÇÃO DESTACADA: Insira este bloco HTML com uma frase de impacto no primeiro terço do texto:
+1. ESCANEABILIDADE: Embora os parágrafos sejam fluidos, mantenha-os curtos (máximo 2 a 3 linhas) para não cansar na tela. Quebre o texto frequentemente.
+2. CITAÇÃO DESTACADA: Insira este bloco HTML com uma frase de impacto humana e marcante no primeiro terço do texto:
 <blockquote style="font-size: 2.2rem; line-height: 1.2; color: #111; font-weight: 800; border-left: 6px solid #000; padding-left: 15px; margin: 30px 0;">"Sua frase de efeito marcante aqui"</blockquote>
 3. IMAGEM INTERMEDIÁRIA: No meio do texto, insira: ![Estratégias de {keyword}]({secondary_img_url})
 4. LINKAGEM INVIOLÁVEL (DoFollow):
-   - 1 link contextual natural para o especialista Maycon Matos usando: {contextual_link}
+   {regra_link_maycon}
    - 2 links internos usando EXATAMENTE as URLs abaixo estruturadas em Markdown:
      * Link 1: `[Texto Âncora AQUI]({link_int1})`
      * Link 2: `[Texto Âncora AQUI]({link_int2})`
-   - 2 links para fontes externas internacionais confiáveis.
-5. ESTRUTURA: Introdução, "⚡ Resumo Rápido" em marcadores, Desenvolvimento (H2/H3 e Tabelas), Conclusão com CTA, e FAQ (5 perguntas). Não inclua nenhuma informação de assinatura ou autor no texto gerado por você.
+   - 2 links para fontes externas internacionais confiáveis de notícias/dados de tecnologia (ex: Search Engine Land, Backlinko, TechCrunch).
+5. ESTRUTURA GLOBAL: Introdução, "⚡ Resumo Rápido" em formato de texto corrido/parágrafo curto, Desenvolvimento em prosa fluida (usando H2/H3 e Tabelas informativas para quebrar o padrão), Conclusão com CTA profissional, e FAQ (5 perguntas reais de clientes). Não inclua nenhuma informação de assinatura ou autor no texto gerado por você.
 
 Nas primeiras linhas, defina os metadados exatamente assim:
 CATEGORIA_SELECIONADA: [Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA]
@@ -155,7 +170,7 @@ TAGS_SELECIONADAS: [3 tags separadas por virgula]
 
 Gere apenas o corpo do artigo em Markdown, sem os blocos separadores (---) iniciais."""
 
-    print(f"📝 Gerando corpo do artigo sobre: {topico}...")
+    print(f"📝 Gerando corpo do artigo humanizado sobre: {topico}...")
     response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt_master)
     content = response.text.strip()
     
@@ -193,10 +208,7 @@ img_alt: "Estratégia avançada de {keyword} discutida no portal {CONFIG['COMPAN
 ---
 
 """
-    # 🌟 INCLUSÃO DO SHORTCODE AUTOMÁTICO NO FINAL DO ARTIGO
-    # Isso injeta o arquivo _includes/autor.html em 100% dos posts gerados pela automação.
     content_com_autor = content + "\n\n{% include autor.html %}"
-
     final_output = front_matter + content_com_autor
     CONFIG['OUTPUT_FOLDER'].mkdir(parents=True, exist_ok=True)
     output_path = CONFIG['OUTPUT_FOLDER'] / f"{today_str}-{base_slug}.md"
