@@ -162,7 +162,8 @@ REGRAS DE FORMATAÇÃO E ESTRUTURA RÍGIDAS:
      * Link 1: `[Texto Âncora AQUI]({link_int1})`
      * Link 2: `[Texto Âncora AQUI]({link_int2})`
    - 2 links para fontes externas internacionais confiáveis de notícias/dados de tecnologia (ex: Search Engine Land, Backlinko, TechCrunch).
-5. ESTRUTURA GLOBAL: Introdução, "⚡ Resumo Rápido" em formato de texto corrido/parágrafo curto, Desenvolvimento em prosa fluida (usando H2/H3 e Tabelas informativas para quebrar o padrão), Conclusão com CTA profissional, e FAQ (5 perguntas reais de clientes). Não inclua nenhuma informação de assinatura ou autor no texto gerado por você.
+5. ESTRUTURA GLOBAL: Introdução, "⚡ Resumo Rápido" em formato de texto corrido/parágrafo curto, Desenvolvimento em prosa fluida (usando H2/H3 e Tabelas informativas para quebrar o padrão). Ao criar tabelas, use no máximo 2 ou 3 colunas curtas e aplique CSS white-space: normal; para garantir quebras de linha automáticas dentro das células, evitando rolagem horizontal. 
+   - Conclusão com CTA profissional, e FAQ (5 perguntas reais de clientes). Não inclua nenhuma informação de assinatura ou autor no texto gerado por você.
 
 Nas primeiras linhas, defina os metadados exatamente assim:
 CATEGORIA_SELECIONADA: [Análises, SEO Local, SEO Técnico, Estratégia, Mercado ou IA]
