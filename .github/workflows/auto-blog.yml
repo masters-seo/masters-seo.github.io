@@ -2,7 +2,7 @@ name: 🚀 Auto Blog Generator
 
 on:
   schedule:
-    - cron: '0 12 * * *' # 12:00 UTC = 09:00 no Brasil
+    - cron: '0 19 * * *' # Mantido no horário de teste que você configurou (16:00 BRT)
   workflow_dispatch: # Permite execução manual
 
 jobs:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_PAT }} # OBRIGATÓRIO: Permite que o site seja reconstruído
+          token: ${{ secrets.GH_PAT }} # Mantém a permissão para disparar o Deploy automático
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -34,9 +34,43 @@ jobs:
         run: |
           python .github/scripts/generate_article.py
       
-      - name: Commit changes
+      - name: Commit and Push changes
+        id: commit_step
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add _posts/*.md || true
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Add auto-generated article $(date +'%Y-%m-%d')" && git push)
+          
+          # Verifica se houve alteração real (novo artigo criado)
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "CHANGED=false" >> $GITHUB_ENV
+            echo "Nenhum artigo novo foi gerado hoje."
+          else
+            git commit -m "Add auto-generated article $(date +'%Y-%m-%d')"
+            git push
+            echo "CHANGED=true" >> $GITHUB_ENV
+            echo "Novo artigo commitado e enviado para o ar!"
+          fi
+
+      # ✉️ ENVIAR NOTIFICAÇÃO POR E-MAIL (Apenas se um artigo novo foi publicado com sucesso)
+      - name: Send Email Notification
+        if: env:CHANGED == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: mayconmatosdigital@gmail.com
+          password: ${{ secrets.GMAIL_PASSWORD }}
+          subject: "🎉 Novo Artigo Publicado e Disponível na Home!"
+          to: mayconmatosdigital@gmail.com
+          from: "Robô Masters SEO <mayconmatosdigital@gmail.com>"
+          secure: true
+          body: |
+            Publicado! Olá Maycon,
+            
+            O seu agente chefe de automação M. K. Hash, acabou de publicar um artigo inédito com sucesso no portal Masters SEO!
+            
+            O arquivo foi gerado, indexado no Google e a construção automática da página inicial (Home) foi disparada. Você já pode conferir a atualização diretamente no link principal.
+            
+            Abraços,
+            Sua Automação GitHub Actions.
