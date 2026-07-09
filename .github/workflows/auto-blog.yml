@@ -26,13 +26,19 @@ jobs:
           pip install google-genai requests pillow google-auth
       
       - name: Generate article
+        id: gen_article
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           COMPANY_NAME: "Masters SEO"
           COMPANY_WEBSITE: "https://masters-seo.github.io/"
         run: |
-          python .github/scripts/generate_article.py
+          # Executa o script salvando os logs e textos gerados em uma variável de ambiente do passo
+          OUTPUT=$(python .github/scripts/generate_article.py)
+          echo "$OUTPUT"
+          
+          # Procura pela linha ARTICLE_SLUG= gerada pelo Python e exporta para o ambiente do Workflow
+          echo "$(echo "$OUTPUT" | grep ARTICLE_SLUG)" >> $GITHUB_ENV
       
       - name: Commit and Push changes
         id: commit_step
@@ -68,7 +74,10 @@ jobs:
             
             O seu agente chefe de automação M. K. Hash, acabou de publicar um artigo inédito com sucesso no portal Masters SEO!
             
-            O arquivo foi gerado, indexado no Google e a construção automática da página inicial (Home) foi disparada. Você já pode conferir a atualização diretamente no link principal.
+            O arquivo foi gerado, indexado no Google e a construção automática da página inicial (Home) foi disparada. Você já pode conferir a atualização diretamente no link abaixo.
+            
+            Acesse o conteúdo aqui: https://masters-seo.github.io/posts/${{ env.ARTICLE_SLUG }}/
+            ou se falhar veja diretamente na home do site: https://masters-seo.github.io/
             
             Abraços,
             Sua Automação GitHub Actions.
