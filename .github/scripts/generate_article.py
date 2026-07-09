@@ -31,7 +31,7 @@ CONFIG = {
         'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=60',
         'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'
     ],
-    'KEYWORDS': ['experts de seo', 'melhores profissionais de seo', 'analise de seo', 'consultor de seo', 'curso de seo avaliacao', 'otimizacao para IA'],
+    'KEYWORDS': ['experts de seo', 'melhores professionals de seo', 'analise de seo', 'consultor de seo', 'curso de seo avaliacao', 'otimizacao para IA'],
     'MAYCON_LINKS': [
         'https://mayconmatos.com.br/',
         'https://mayconmatos.com.br/recursos/diagnostico-presenca-digital/',
@@ -158,7 +158,7 @@ REGRAS DE FORMATAÇÃO E ESTRUTURA RÍGIDAS:
 3. IMAGEM INTERMEDIÁRIA: No meio do texto, insira: ![Estratégias de {keyword}]({secondary_img_url})
 4. LINKAGEM INVIOLÁVEL (DoFollow):
    {regra_link_maycon}
-   - 2 links internos usando EXATAMENTE as URLs abaixo estruturadas em Markdown:
+   - 2 links internos usando EXATAMENTE as URLs abaixo estruturadas in Markdown:
      * Link 1: `[Texto Âncora AQUI]({link_int1})`
      * Link 2: `[Texto Âncora AQUI]({link_int2})`
    - 2 links para fontes externas internacionais confiáveis de notícias/dados de tecnologia (ex: Search Engine Land, Backlinko, TechCrunch).
@@ -194,7 +194,7 @@ Gere apenas o corpo do artigo em Markdown, sem os blocos separadores (---) inici
 
     hoje = datetime.now()
     today_str = hoje.strftime('%Y-%m-%d')
-    base_slug = slugify(f"{topico} Análise Especializada")
+    base_slug = slugify(f"{topico} Analise Especializada")
     img_url = random.choice(CONFIG['UNSPLASH_POOL'])
     horario_imediato = "00:01:00" 
 
@@ -218,6 +218,10 @@ img_alt: "Estratégia avançada de {keyword} discutida no portal {CONFIG['COMPAN
         f.write(final_output)
 
     print(f"✅ Post publicado com sucesso em: {output_path}")
+    
+    # 🚀 IMPRIME O SLUG PARA O GITHUB ACTIONS CAPTURAR E ENVIAR NO LINK DO E-MAIL
+    print(f"ARTICLE_SLUG={base_slug}")
+
     url_publicada = f"{CONFIG['COMPANY_WEBSITE']}posts/{base_slug}/"
     
     if CONFIG['ENVIAR_PARA_GOOGLE']:
