@@ -33,11 +33,8 @@ jobs:
           COMPANY_NAME: "Masters SEO"
           COMPANY_WEBSITE: "https://masters-seo.github.io/"
         run: |
-          # Executa o script salvando os logs e textos gerados em uma variável de ambiente do passo
           OUTPUT=$(python .github/scripts/generate_article.py)
           echo "$OUTPUT"
-          
-          # Procura pela linha ARTICLE_SLUG= gerada pelo Python e exporta para o ambiente do Workflow
           echo "$(echo "$OUTPUT" | grep ARTICLE_SLUG)" >> $GITHUB_ENV
       
       - name: Commit and Push changes
@@ -45,13 +42,15 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add _posts/*.md || true
+          
+          # CORREÇÃO AQUI: Adiciona os posts novos E o arquivo de temas modificado
+          git add _posts/*.md .github/scripts/temas.txt || true
           
           if git diff --quiet && git diff --staged --quiet; then
             echo "CHANGED=false" >> $GITHUB_ENV
             echo "Nenhum artigo novo foi gerado hoje."
           else
-            git commit -m "Add auto-generated article $(date +'%Y-%m-%d')"
+            git commit -m "Add auto-generated article and update topics $(date +'%Y-%m-%d')"
             git push
             echo "CHANGED=true" >> $GITHUB_ENV
             echo "Novo artigo commitado e enviado para o ar!"
