@@ -43,14 +43,14 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # CORREÇÃO AQUI: Adiciona os posts novos E o arquivo de temas modificado
-          git add _posts/*.md .github/scripts/temas.txt || true
+          # ATUALIZAÇÃO: Adiciona os posts novos, o temas.txt e a nova pasta de imagens geradas
+          git add _posts/*.md .github/scripts/temas.txt assets/img/posts/* || true
           
           if git diff --quiet && git diff --staged --quiet; then
             echo "CHANGED=false" >> $GITHUB_ENV
             echo "Nenhum artigo novo foi gerado hoje."
           else
-            git commit -m "Add auto-generated article and update topics $(date +'%Y-%m-%d')"
+            git commit -m "Add auto-generated article, images, and update topics $(date +'%Y-%m-%d')"
             git push
             echo "CHANGED=true" >> $GITHUB_ENV
             echo "Novo artigo commitado e enviado para o ar!"
