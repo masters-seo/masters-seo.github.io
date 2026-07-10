@@ -140,39 +140,33 @@ def gerar_prompt_imagem(client, topico, keywords, contexto):
 
 def gerar_e_salvar_imagem(client, prompt, slug, sufixo):
     """Tenta gerar a imagem via Gemini e salvar localmente."""
-    # Define o nome e caminho da imagem
-    img_name = f"{sufoixo}_{datetime.now().strftime('%H%M%S')}.png" # Nome único: slug_sufixo_HHMMSS.png
+    # CORREÇÃO: Variável corrigida para 'sufixo' e incluído o 'slug' no padrão do nome do arquivo
+    img_name = f"{slug}_{sufixo}_{datetime.now().strftime('%H%M%S')}.png" 
     img_path = CONFIG['IMAGE_OUTPUT_FOLDER'] / img_name
     
-    print(f"🎨 Gerando imagem IA para: {img_name} com prompt: {prompt[:80]}...")
+    print(f"🎨 Gerando imagem IA para: {img_name}...")
     
-    # --- LÓGICA DE GERAÇÃO DE IMAGEM ---
-    # Nota: Esta parte assume que o modelo gemini-2.5-flash tem geração multimodal (Imagen).
-    # Se não tiver, esta parte falhará e você precisará usar uma API externa como Hugging Face.
     try:
-        # Exemplo de chamada para geração de imagem (multimodal)
-        # Verifique a documentação exata da versão da sua biblioteca google-genai
-        # pois a API de geração de imagem pode diferir.
+        # Chamada oficial do SDK google-genai para geração de imagens via Imagen
         images_response = client.models.generate_images(
-            model='gemini-2.5-flash',
+            model='imagen-3.0-generate-002', # Modelo correto para geração de imagens no Google GenAI
             prompt=prompt,
-            number_of_images=1,
-            aspect_ratio="16:9", # Aspect ratio para blogs
-            safety_settings=[] # Configurações de segurança se necessário
+            config=dict(
+                number_of_images=1,
+                aspect_ratio="16:9",
+                output_mime_type="image/png"
+            )
         )
         
-        # Se a imagem foi gerada com sucesso
-        if images_response and images_response.images:
-            image_data = images_response.images[0].image_bytes # Captura os bytes da imagem
+        if images_response and images_response.generated_images:
+            image_bytes = images_response.generated_images[0].image.image_bytes
             
-            # Usa Pillow para validar e salvar a imagem
-            with Image.open(io.BytesIO(image_data)) as img:
+            with Image.open(io.BytesIO(image_bytes)) as img:
                 img.save(img_path)
                 print(f"✅ Imagem salva com sucesso em: {img_path}")
-                # Retorna o caminho relativo que o Jekyll/Chirpy reconhece (/assets/img/posts/nome.png)
                 return f"/assets/img/posts/{img_name}"
         else:
-            print(f"⚠️ Gemini não retornou imagem.")
+            print(f"⚠️ Gemini não retornou imagem válida nos resultados.")
             return None
             
     except Exception as e:
@@ -196,20 +190,18 @@ def executar_geracao():
     keyword = random.choice(CONFIG['KEYWORDS'])
     
     # 1. Gerar os Prompts de Imagem baseados no tópico
-    # Usamos o Gemini para criar prompts únicos para a imagem principal e secundária
-    # Passamos um pouco de contexto técnico para enriquecer o prompt da imagem.
-    contexto_técnico = random.sample(CONFIG['KEYWORDS'], 3) # Seleciona 3 keywords aleatórias para contexto
-    main_image_prompt = gerar_prompt_imagem(client, topico, CONFIG['KEYWORDS'], f"Contexto: {', '.join(contexto_técnico)}")
+    contexto_tecnico = random.sample(CONFIG['KEYWORDS'], 3)
+    main_image_prompt = gerar_prompt_imagem(client, topico, CONFIG['KEYWORDS'], f"Contexto: {', '.join(contexto_tecnico)}")
     secondary_image_prompt = gerar_prompt_imagem(client, topico, CONFIG['KEYWORDS'], "Foco: Estratégias táticas e ferramentas de análise")
 
-    # 2. Gerar e Salvar as imagens de fato
-    # Supondo que o Gemini gera imagem. Salva como /assets/img/posts/data-slug_main.png
-    main_img_url_local = gerar_e_salvar_imagem(client, main_image_prompt, f"{today_str}-{base_slug}", "main")
-    secondary_img_url_local = gerar_e_salvar_imagem(client, secondary_image_prompt, f"{today_str}-{base_slug}", "sec")
+    # 2. Gerar e Salvar as imagens
+    slug_da_imagem = f"{today_str}-{base_slug}"
+    main_img_url_local = gerar_e_salvar_imagem(client, main_image_prompt, slug_da_imagem, "main")
+    secondary_img_url_local = gerar_e_salvar_imagem(client, secondary_image_prompt, slug_da_imagem, "sec")
 
-    # Fallback se a geração falhar (para não quebrar o commit)
+    # Fallback se a geração falhar (evita quebrar o commit)
     if not main_img_url_local:
-        main_img_url_local = "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800" # Imagem segura se falhar
+        main_img_url_local = "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800"
     if not secondary_img_url_local:
         secondary_img_url_local = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800"
 
@@ -217,7 +209,6 @@ def executar_geracao():
     link_int1 = random.choice(links_reais)
     link_int2 = random.choice([l for l in links_reais if l != link_int1] or links_reais)
 
-    # 🛡️ SISTEMA ANTISPAM: Sorteio de 20% de probabilidade para o link externo do Maycon
     chance = random.randint(1, 100)
     if chance <= 20:
         contextual_link = random.choice(CONFIG['MAYCON_LINKS'])
@@ -227,7 +218,6 @@ def executar_geracao():
         regra_link_maycon = "- NÃO inclua nenhum link contextual para o domínio do Maycon Matos hoje no meio do texto."
         print("🎲 Sorteio: Link do Maycon IGNORADO hoje por segurança de SEO (80% de chance).")
 
-    # Atualizado: Prompt de texto pede referências específicas para as imagens geradas
     prompt_master = f"""Atue como um redator especialista em SEO técnico com 15 anos de experiência no mercado brasileiro. Escreva um texto de autoridade absoluta sobre o tema: "{topico}".
 
 DIRETRIZES DE ESCRITA PARA EVITAR DETECÇÃO DE IA E GARANTIR FLUIDEZ:
@@ -244,7 +234,7 @@ REGRAS DE FORMATAÇÃO E ESTRUTURA RÍGIDAS:
 3. IMAGEM INTERMEDIÁRIA: No meio do texto, insira: ![Estratégias de {keyword}]({secondary_img_url_local})
 4. LINKAGEM INVIOLÁVEL (DoFollow):
    {regra_link_maycon}
-   - 2 links internos usando EXATAMENTE as URLs abaixo estruturadas em Markdown:
+   - 2 links internos usando EXATAMENTE as URLs abaixo estruturadas in Markdown:
      * Link 1: `[Texto Âncora AQUI]({link_int1})`
      * Link 2: `[Texto Âncora AQUI]({link_int2})`
    - 2 links para fontes externas internacionais confiáveis de notícias/dados de tecnologia (ex: Search Engine Land, Backlinko, TechCrunch).
@@ -280,14 +270,13 @@ Gere apenas o corpo do artigo em Markdown, sem os blocos separadores (---) inici
 
     horario_imediato = "00:01:00" 
 
-    # Front Matter agora aponta para a imagem local gerada
     front_matter = f"""---
 layout: post
 title: "{titulo_seguro} - Análise Especializada"
 date: {today_str} {horario_imediato} -0300
 categories: ["{category_safe}"]
 tags: ["{tags_safe}"]
-image: "{main_img_url_local}" # Aponta para imagem local gerada
+image: "{main_img_url_local}" 
 img_alt: "Estratégia avançada de {keyword} discutida no portal {CONFIG['COMPANY_NAME']}"
 ---
 
@@ -301,8 +290,6 @@ img_alt: "Estratégia avançada de {keyword} discutida no portal {CONFIG['COMPAN
         f.write(final_output)
 
     print(f"✅ Post publicado com sucesso em: {output_path}")
-    
-    # 🚀 IMPRIME O SLUG PARA O GITHUB ACTIONS CAPTURAR E ENVIAR NO LINK DO E-MAIL
     print(f"ARTICLE_SLUG={base_slug}")
 
     url_publicada = f"{CONFIG['COMPANY_WEBSITE']}posts/{base_slug}/"
@@ -313,4 +300,4 @@ img_alt: "Estratégia avançada de {keyword} discutida no portal {CONFIG['COMPAN
     return True
 
 if __name__ == '__main__':
-    executar_geracao()
+    executar_generacao()
