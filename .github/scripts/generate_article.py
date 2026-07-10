@@ -5,8 +5,10 @@ import re
 import unicodedata
 import requests
 import json
+import io
 from datetime import datetime
 from pathlib import Path
+from PIL import Image # Requer: pip install pillow
 from google import genai
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
@@ -22,16 +24,10 @@ CONFIG = {
     'COMPANY_NAME': os.getenv('COMPANY_NAME', 'Masters SEO'),
     'COMPANY_WEBSITE': os.getenv('COMPANY_WEBSITE', 'https://masters-seo.github.io/'),
     'OUTPUT_FOLDER': Path(os.getenv('GITHUB_WORKSPACE', Path.cwd())) / '_posts',
+    'IMAGE_OUTPUT_FOLDER': Path(os.getenv('GITHUB_WORKSPACE', Path.cwd())) / 'assets/img/posts', # Pasta de imagens
     'ARQUIVO_TEMAS': Path(os.getenv('GITHUB_WORKSPACE', Path.cwd())) / '.github' / 'scripts' / 'temas.txt',
     
-    'UNSPLASH_POOL': [
-        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60'
-    ],
-    'KEYWORDS': ['experts de seo', 'melhores professionals de seo', 'analise de seo', 'consultor de seo', 'curso de seo avaliacao', 'otimizacao para IA'],
+    'KEYWORDS': ['experts de seo', 'melhores profissionais de seo', 'analise de seo', 'consultor de seo', 'curso de seo avaliacao', 'otimizacao para IA'],
     'MAYCON_LINKS': [
         'https://mayconmatos.com.br/',
         'https://mayconmatos.com.br/recursos/diagnostico-presenca-digital/',
@@ -41,6 +37,10 @@ CONFIG = {
         'https://mayconmatos.com.br/consultor-de-seo-para-google-e-ia/'
     ]
 }
+
+# Garante que as pastas de saída existem
+CONFIG['OUTPUT_FOLDER'].mkdir(parents=True, exist_ok=True)
+CONFIG['IMAGE_OUTPUT_FOLDER'].mkdir(parents=True, exist_ok=True)
 
 def obter_tema_inteligente(client):
     tema_escolhido = ""
@@ -114,6 +114,71 @@ def solicitar_indexacao_google(target_url):
     except Exception as e:
         print(f"⚠️ Indexing API Erro: {e}")
 
+def gerar_prompt_imagem(client, topico, keywords, contexto):
+    """Usa o Gemini para gerar um prompt de imagem detalhado e único."""
+    print(f"📝 Gerando prompt de imagem único para: {topico}...")
+    prompt_gen = f"""Atue como um Diretor de Arte Especialista em Fotografia Stock para Blogs de Tecnologia e Marketing.
+    O tema do artigo é: '{topico}'.
+    As palavras-chave são: {', '.join(keywords)}.
+    
+    Crie um prompt detalhado e em INGLÊS para um gerador de imagens IA (como Stable Diffusion ou Imagen).
+    A imagem deve ser moderna, limpa, profissional e representar o conceito técnico de forma visualmente atraente.
+    Evite clichês vazios como 'apenas um laptop'. Foque em conceitos abstratos visualizados (ex: fluxos de dados, gráficos 3D, conexões neurais).
+    Descreva a iluminação (ex: cinematic, soft bokeh), estilo (ex: minimalista, hyperrealistic), cores (ex: corporate blues, neon accents) e composição.
+    
+    Seja criativo e único baseando-se nestas Keywords secundárias de contexto do artigo:
+    {contexto}
+    
+    REGRA ABSOLUTA: Retorne APENAS o prompt em inglês, sem aspas, sem pontuação final e sem explicações."""
+    
+    try:
+        response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt_gen)
+        return response.text.strip().replace('"', '').replace("'", "")
+    except Exception as e:
+        print(f"❌ Erro ao gerar prompt de imagem: {e}")
+        return f"A modern professional photograph representing SEO and technology, blue and white color palette, cinematic lighting"
+
+def gerar_e_salvar_imagem(client, prompt, slug, sufixo):
+    """Tenta gerar a imagem via Gemini e salvar localmente."""
+    # Define o nome e caminho da imagem
+    img_name = f"{sufoixo}_{datetime.now().strftime('%H%M%S')}.png" # Nome único: slug_sufixo_HHMMSS.png
+    img_path = CONFIG['IMAGE_OUTPUT_FOLDER'] / img_name
+    
+    print(f"🎨 Gerando imagem IA para: {img_name} com prompt: {prompt[:80]}...")
+    
+    # --- LÓGICA DE GERAÇÃO DE IMAGEM ---
+    # Nota: Esta parte assume que o modelo gemini-2.5-flash tem geração multimodal (Imagen).
+    # Se não tiver, esta parte falhará e você precisará usar uma API externa como Hugging Face.
+    try:
+        # Exemplo de chamada para geração de imagem (multimodal)
+        # Verifique a documentação exata da versão da sua biblioteca google-genai
+        # pois a API de geração de imagem pode diferir.
+        images_response = client.models.generate_images(
+            model='gemini-2.5-flash',
+            prompt=prompt,
+            number_of_images=1,
+            aspect_ratio="16:9", # Aspect ratio para blogs
+            safety_settings=[] # Configurações de segurança se necessário
+        )
+        
+        # Se a imagem foi gerada com sucesso
+        if images_response and images_response.images:
+            image_data = images_response.images[0].image_bytes # Captura os bytes da imagem
+            
+            # Usa Pillow para validar e salvar a imagem
+            with Image.open(io.BytesIO(image_data)) as img:
+                img.save(img_path)
+                print(f"✅ Imagem salva com sucesso em: {img_path}")
+                # Retorna o caminho relativo que o Jekyll/Chirpy reconhece (/assets/img/posts/nome.png)
+                return f"/assets/img/posts/{img_name}"
+        else:
+            print(f"⚠️ Gemini não retornou imagem.")
+            return None
+            
+    except Exception as e:
+        print(f"❌ Erro crítico na geração de imagem do Gemini: {e}")
+        return None
+
 def executar_geracao():
     if not CONFIG['GEMINI_API_KEY']:
         print("❌ Erro: GEMINI_API_KEY não configurada.")
@@ -125,9 +190,29 @@ def executar_geracao():
         print("🛑 Geração abortada: Faltou tema para postar.")
         return False
 
+    hoje = datetime.now()
+    today_str = hoje.strftime('%Y-%m-%d')
+    base_slug = slugify(f"{topico} Analise Especializada")
     keyword = random.choice(CONFIG['KEYWORDS'])
-    secondary_img_url = random.choice(CONFIG['UNSPLASH_POOL'])
     
+    # 1. Gerar os Prompts de Imagem baseados no tópico
+    # Usamos o Gemini para criar prompts únicos para a imagem principal e secundária
+    # Passamos um pouco de contexto técnico para enriquecer o prompt da imagem.
+    contexto_técnico = random.sample(CONFIG['KEYWORDS'], 3) # Seleciona 3 keywords aleatórias para contexto
+    main_image_prompt = gerar_prompt_imagem(client, topico, CONFIG['KEYWORDS'], f"Contexto: {', '.join(contexto_técnico)}")
+    secondary_image_prompt = gerar_prompt_imagem(client, topico, CONFIG['KEYWORDS'], "Foco: Estratégias táticas e ferramentas de análise")
+
+    # 2. Gerar e Salvar as imagens de fato
+    # Supondo que o Gemini gera imagem. Salva como /assets/img/posts/data-slug_main.png
+    main_img_url_local = gerar_e_salvar_imagem(client, main_image_prompt, f"{today_str}-{base_slug}", "main")
+    secondary_img_url_local = gerar_e_salvar_imagem(client, secondary_image_prompt, f"{today_str}-{base_slug}", "sec")
+
+    # Fallback se a geração falhar (para não quebrar o commit)
+    if not main_img_url_local:
+        main_img_url_local = "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800" # Imagem segura se falhar
+    if not secondary_img_url_local:
+        secondary_img_url_local = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800"
+
     links_reais = raspar_links_internos_reais()
     link_int1 = random.choice(links_reais)
     link_int2 = random.choice([l for l in links_reais if l != link_int1] or links_reais)
@@ -142,6 +227,7 @@ def executar_geracao():
         regra_link_maycon = "- NÃO inclua nenhum link contextual para o domínio do Maycon Matos hoje no meio do texto."
         print("🎲 Sorteio: Link do Maycon IGNORADO hoje por segurança de SEO (80% de chance).")
 
+    # Atualizado: Prompt de texto pede referências específicas para as imagens geradas
     prompt_master = f"""Atue como um redator especialista em SEO técnico com 15 anos de experiência no mercado brasileiro. Escreva um texto de autoridade absoluta sobre o tema: "{topico}".
 
 DIRETRIZES DE ESCRITA PARA EVITAR DETECÇÃO DE IA E GARANTIR FLUIDEZ:
@@ -155,10 +241,10 @@ REGRAS DE FORMATAÇÃO E ESTRUTURA RÍGIDAS:
 1. ESCANEABILIDADE: Embora os parágrafos sejam fluidos, mantenha-os curtos (máximo 2 a 3 linhas) para não cansar na tela. Quebre o texto frequentemente.
 2. CITAÇÃO DESTACADA: Insira este bloco HTML com uma frase de impacto humana e marcante no primeiro terço do texto:
 <blockquote style="font-size: 2.2rem; line-height: 1.2; color: #111; font-weight: 800; border-left: 6px solid #000; padding-left: 15px; margin: 30px 0;">"Sua frase de efeito marcante aqui"</blockquote>
-3. IMAGEM INTERMEDIÁRIA: No meio do texto, insira: ![Estratégias de {keyword}]({secondary_img_url})
+3. IMAGEM INTERMEDIÁRIA: No meio do texto, insira: ![Estratégias de {keyword}]({secondary_img_url_local})
 4. LINKAGEM INVIOLÁVEL (DoFollow):
    {regra_link_maycon}
-   - 2 links internos usando EXATAMENTE as URLs abaixo estruturadas in Markdown:
+   - 2 links internos usando EXATAMENTE as URLs abaixo estruturadas em Markdown:
      * Link 1: `[Texto Âncora AQUI]({link_int1})`
      * Link 2: `[Texto Âncora AQUI]({link_int2})`
    - 2 links para fontes externas internacionais confiáveis de notícias/dados de tecnologia (ex: Search Engine Land, Backlinko, TechCrunch).
@@ -192,26 +278,23 @@ Gere apenas o corpo do artigo em Markdown, sem os blocos separadores (---) inici
     category_safe = category.replace(":", "").replace("'", "").replace('"', '').replace("[", "").replace("]", "")
     tags_safe = tags.replace(":", "").replace("'", "").replace('"', '').replace("[", "").replace("]", "")
 
-    hoje = datetime.now()
-    today_str = hoje.strftime('%Y-%m-%d')
-    base_slug = slugify(f"{topico} Analise Especializada")
-    img_url = random.choice(CONFIG['UNSPLASH_POOL'])
     horario_imediato = "00:01:00" 
 
+    # Front Matter agora aponta para a imagem local gerada
     front_matter = f"""---
 layout: post
 title: "{titulo_seguro} - Análise Especializada"
 date: {today_str} {horario_imediato} -0300
 categories: ["{category_safe}"]
 tags: ["{tags_safe}"]
-image: "{img_url}"
+image: "{main_img_url_local}" # Aponta para imagem local gerada
 img_alt: "Estratégia avançada de {keyword} discutida no portal {CONFIG['COMPANY_NAME']}"
 ---
 
 """
     content_com_autor = content + "\n\n{% include autor.html %}"
     final_output = front_matter + content_com_autor
-    CONFIG['OUTPUT_FOLDER'].mkdir(parents=True, exist_ok=True)
+    
     output_path = CONFIG['OUTPUT_FOLDER'] / f"{today_str}-{base_slug}.md"
     
     with open(output_path, 'w', encoding='utf-8') as f:
