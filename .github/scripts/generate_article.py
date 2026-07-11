@@ -140,16 +140,14 @@ def gerar_prompt_imagem(client, topico, keywords, contexto):
 
 def gerar_e_salvar_imagem(client, prompt, slug, sufixo):
     """Tenta gerar a imagem via Gemini e salvar localmente."""
-    # CORREÇÃO: Variável corrigida para 'sufixo' e incluído o 'slug' no padrão do nome do arquivo
     img_name = f"{slug}_{sufixo}_{datetime.now().strftime('%H%M%S')}.png" 
     img_path = CONFIG['IMAGE_OUTPUT_FOLDER'] / img_name
     
     print(f"🎨 Gerando imagem IA para: {img_name}...")
     
     try:
-        # Chamada oficial do SDK google-genai para geração de imagens via Imagen
         images_response = client.models.generate_images(
-            model='imagen-3.0-generate-002', # Modelo correto para geração de imagens no Google GenAI
+            model='imagen-3.0-generate-002',
             prompt=prompt,
             config=dict(
                 number_of_images=1,
@@ -234,7 +232,7 @@ REGRAS DE FORMATAÇÃO E ESTRUTURA RÍGIDAS:
 3. IMAGEM INTERMEDIÁRIA: No meio do texto, insira: ![Estratégias de {keyword}]({secondary_img_url_local})
 4. LINKAGEM INVIOLÁVEL (DoFollow):
    {regra_link_maycon}
-   - 2 links internos usando EXATAMENTE as URLs abaixo estruturadas in Markdown:
+   - 2 links internos usando EXATAMENTE as URLs abaixo estruturadas em Markdown:
      * Link 1: `[Texto Âncora AQUI]({link_int1})`
      * Link 2: `[Texto Âncora AQUI]({link_int2})`
    - 2 links para fontes externas internacionais confiáveis de notícias/dados de tecnologia (ex: Search Engine Land, Backlinko, TechCrunch).
@@ -300,4 +298,4 @@ img_alt: "Estratégia avançada de {keyword} discutida no portal {CONFIG['COMPAN
     return True
 
 if __name__ == '__main__':
-    executar_generacao()
+    executar_geracao()
