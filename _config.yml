@@ -225,3 +225,7 @@ jekyll-archives:
     tag: /tags/:name/
     category: /categories/:name/
 future: true
+
+url: "https://masters-seo.github.io"
+plugins:
+  - jekyll-sitemap
